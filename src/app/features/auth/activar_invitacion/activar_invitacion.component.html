@@ -1,0 +1,33 @@
+<section class="activate-wrap">
+  <article class="card activate-card">
+    <h1>Activar cuenta de empleado</h1>
+    <p class="muted">Crea tu usuario y contrasena para habilitar tu acceso.</p>
+
+    <p class="error" *ngIf="!token">Invitacion invalida: falta el token en el enlace.</p>
+
+    <form *ngIf="token" [formGroup]="form" class="form-grid" (ngSubmit)="submit()">
+      <div>
+        <label class="label">Usuario</label>
+        <input class="input" formControlName="username" autocomplete="username" />
+      </div>
+
+      <div>
+        <label class="label">Contrasena</label>
+        <input class="input" type="password" formControlName="password" autocomplete="new-password" />
+      </div>
+
+      <div>
+        <label class="label">Confirmar contrasena</label>
+        <input class="input" type="password" formControlName="confirmPassword" autocomplete="new-password" />
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-primary" [disabled]="loading || form.invalid">{{ loading ? 'Activando...' : 'Activar cuenta' }}</button>
+        <a class="btn btn-ghost" routerLink="/login">Ir a login</a>
+      </div>
+    </form>
+
+    <p class="error" *ngIf="errorMsg">{{ errorMsg }}</p>
+  </article>
+</section>
+

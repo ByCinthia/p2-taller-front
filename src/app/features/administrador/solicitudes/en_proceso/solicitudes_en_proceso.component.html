@@ -1,0 +1,29 @@
+<section class="card page-block">
+  <header class="head">
+    <div>
+      <h2>Solicitudes en proceso</h2>
+      <p class="muted">Solicitudes que están siendo atendidas actualmente.</p>
+    </div>
+    <button class="btn btn-ghost" (click)="load()" [disabled]="loading">{{ loading ? 'Cargando...' : 'Actualizar' }}</button>
+  </header>
+
+  <div *ngIf="loading" class="muted">Cargando...</div>
+  <div *ngIf="!loading && items.length === 0" class="muted">No hay solicitudes en proceso.</div>
+
+  <div class="list" *ngIf="!loading && items.length > 0">
+    <article class="card" *ngFor="let it of items">
+      <div class="row">
+        <div>
+          <strong>{{ it.tipo || 'Solicitud' }}</strong>
+          <div class="muted">ID: {{ it.id }}</div>
+        </div>
+        <div class="right">
+          <div class="muted">{{ it.creado_en | date: 'dd/MM/yyyy HH:mm' }}</div>
+          <span class="badge estado">{{ it.estado }}</span>
+        </div>
+      </div>
+      <p class="desc">{{ it.descripcion || 'Sin descripción' }}</p>
+    </article>
+  </div>
+</section>
+

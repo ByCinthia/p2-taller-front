@@ -1,0 +1,51 @@
+<section class="card page-block">
+  <header class="head">
+    <div>
+      <h2>Permisos</h2>
+      <p class="muted">Gestion global de permisos (crear, editar y eliminar).</p>
+    </div>
+    <a *ngIf="!isCreateView && canManage" [routerLink]="['/app/permisos/nuevo']" class="btn btn-primary">Registrar permiso</a>
+    <a *ngIf="isCreateView" [routerLink]="['/app/permisos']" class="btn btn-ghost">Volver al listado</a>
+  </header>
+
+  <p class="error" *ngIf="errorMsg">{{ errorMsg }}</p>
+
+  <form class="form-grid card inner" [formGroup]="form" (ngSubmit)="save()" *ngIf="canManage && isCreateView">
+    <h3>{{ editingId ? 'Editar permiso' : 'Nuevo permiso' }}</h3>
+    <div>
+      <label class="label">Nombre</label>
+      <input class="input" formControlName="nombre" />
+    </div>
+    <div>
+      <label class="label">Descripcion</label>
+      <input class="input" formControlName="descripcion" />
+    </div>
+    <div class="actions">
+      <button class="btn btn-primary" [disabled]="form.invalid || loading">
+        {{ editingId ? 'Actualizar' : 'Crear' }}
+      </button>
+      <button type="button" class="btn btn-ghost" (click)="resetForm()">Cancelar</button>
+    </div>
+  </form>
+
+  <table class="table" *ngIf="!isCreateView">
+    <thead>
+      <tr>
+        <th>Nombre</th>
+        <th>Descripcion</th>
+        <th *ngIf="canManage">Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let permiso of permisos">
+        <td>{{ permiso.nombre }}</td>
+        <td>{{ permiso.descripcion }}</td>
+        <td *ngIf="canManage">
+          <button class="btn btn-ghost" (click)="openEdit(permiso)">Editar</button>
+          <button class="btn btn-danger" (click)="remove(permiso)">Eliminar</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+

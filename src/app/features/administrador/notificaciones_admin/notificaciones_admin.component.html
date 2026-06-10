@@ -1,0 +1,74 @@
+<section class="card page-block">
+  <header class="head">
+    <div>
+      <h2>Mis Notificaciones</h2>
+      <p class="muted">Avisos y actualizaciones de las solicitudes de auxilio.</p>
+    </div>
+    <button class="btn btn-ghost" type="button" (click)="loadNotifications()" [disabled]="loadingNotifications">
+      {{ loadingNotifications ? 'Cargando...' : 'Actualizar' }}
+    </button>
+  </header>
+
+  <p class="error" *ngIf="errorMsg">{{ errorMsg }}</p>
+
+  <p class="muted" *ngIf="loadingNotifications">Cargando notificaciones...</p>
+  <div *ngIf="!loadingNotifications && notifications.length === 0" class="muted">No tienes notificaciones.</div>
+
+  <div class="notifications-list" *ngIf="!loadingNotifications && notifications.length > 0">
+    <article
+      class="notification-card"
+      *ngFor="let notif of notifications"
+      (click)="showNotificationDetail(notif)"
+      [class.unread]="!notif.leida"
+    >
+      <div class="notification-header">
+        <strong class="notification-title">{{ notif.titulo }}</strong>
+        <span class="notification-date">{{ notif.creada_en | date: 'dd/MM HH:mm' }}</span>
+      </div>
+      <div class="notification-body">{{ notif.mensaje }}</div>
+      <div *ngIf="!notif.leida" class="badge badge--new">Nuevo</div>
+    </article>
+  </div>
+
+  <!-- Modal de Detalle -->
+  <div *ngIf="selectedNotification" class="modal-overlay" (click)="closeNotificationDetail()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Detalle de notificación</h3>
+        <button class="btn-close" (click)="closeNotificationDetail()">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="detail-section">
+          <span class="label">Título</span>
+          <p>{{ selectedNotification.titulo }}</p>
+        </div>
+
+        <div class="detail-section">
+          <span class="label">Mensaje</span>
+          <p>{{ selectedNotification.mensaje }}</p>
+        </div>
+
+        <div class="detail-section">
+          <span class="label">Fecha</span>
+          <p>{{ selectedNotification.creada_en | date: 'dd/MM/yyyy HH:mm:ss' }}</p>
+        </div>
+
+        <div class="detail-section" *ngIf="selectedNotification.data">
+          <span class="label">Información adicional</span>
+          <div class="data-info">
+            <div *ngFor="let item of (selectedNotification.data | keyvalue)" class="info-item">
+              <span class="key">{{ item.key }}</span>
+              <span class="value">{{ item.value }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn" (click)="closeNotificationDetail()">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</section>
+

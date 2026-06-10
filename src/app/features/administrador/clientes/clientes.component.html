@@ -1,0 +1,42 @@
+<section class="card page-block">
+  <header class="head">
+    <div>
+      <h2>Clientes</h2>
+      <p class="muted">Registro y mantenimiento de clientes.</p>
+    </div>
+    <a routerLink="/app/clientes/nuevo" class="btn btn-primary">Registrar cliente</a>
+  </header>
+
+  <div *ngIf="loading" class="muted">Cargando clientes...</div>
+  <div *ngIf="!loading && clientes.length === 0" class="muted">No hay clientes.</div>
+
+  <table class="table" *ngIf="!loading && clientes.length > 0">
+    <thead>
+      <tr>
+        <th>Nombre</th>
+        <th>Usuario</th>
+        <th>Correo</th>
+        <th>Telefono</th>
+        <th>Estado</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let c of clientes">
+        <td>{{ c.nombre }}</td>
+        <td>{{ c.username || 'N/A' }}</td>
+        <td>{{ c.email || 'N/A' }}</td>
+        <td>{{ c.telefono || 'N/A' }}</td>
+        <td>
+          <span class="badge" [class.badge--inactive]="c.activo === false">
+            {{ c.activo === false ? 'Inactivo' : 'Activo' }}
+          </span>
+        </td>
+        <td>
+          <a [routerLink]="['/app/clientes', c.id]" class="btn btn-ghost">Ver</a>
+          <a [routerLink]="['/app/clientes', c.id]" [queryParams]="{ mode: 'edit' }" class="btn btn-ghost">Editar</a>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</section>

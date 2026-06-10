@@ -1,0 +1,16 @@
+<div class="shell">
+  <app-sidebar></app-sidebar>
+
+  <main class="page content">
+    <app-topbar></app-topbar>
+    <section class="workspace">
+      <router-outlet></router-outlet>
+    </section>
+  </main>
+</div>
+
+<app-toast-container></app-toast-container>
+
+<app-notification-alert *ngIf="activeAlertIncidentId" [incidenteId]="activeAlertIncidentId" (close)="activeAlertIncidentId = null"></app-notification-alert>
+
+

@@ -1,0 +1,387 @@
+<div class="container">
+  <header class="header">
+    <h2 *ngIf="isEmpleadoView">Solicitudes asignadas</h2>
+    <h2 *ngIf="isAdminView">Gestión de Incidentes</h2>
+    <h2 *ngIf="isClientView">Mis Incidentes</h2>
+    <p class="subtitle" *ngIf="isEmpleadoView">Aquí ves solo las solicitudes que te asignaron</p>
+    <p class="subtitle" *ngIf="isAdminView">Asigna técnicos a solicitudes pendientes</p>
+    <p class="subtitle" *ngIf="isClientView">Registros de tus solicitudes de auxilio</p>
+  </header>
+
+  <!-- SecciÃ³n: Mi ubicaciÃ³n del tÃ©cnico (solo para empleados/admin) -->
+  <section class="section tech-location" *ngIf="isEmpleadoView">
+    <h3>Mi Ubicación (Técnico)</h3>
+    <div class="tech-location-content">
+      <div class="checkbox-group">
+        <input type="checkbox" id="disponible" [(ngModel)]="miDisponible" />
+        <label for="disponible">Disponible para asignaciones</label>
+      </div>
+      <button class="btn btn-primary" (click)="actualizarMiUbicacion()" [disabled]="updatingLocation">
+        {{ updatingLocation ? 'Actualizando...' : 'Actualizar mi ubicación' }}
+      </button>
+      <div class="muted" *ngIf="ultimaUbicacionActualizada">
+        Última actualización: {{ ultimaUbicacionActualizada | date:'short' }}
+      </div>
+    </div>
+  </section>
+
+  <!-- Formulario de cliente: crear incidente -->
+  <section class="section" *ngIf="auth.isClient">
+    <div class="section-head">
+      <div>
+        <h3>Reportar nueva solicitud de auxilio</h3>
+        <p class="muted">Selecciona tipo, ubicación y adjunta evidencias</p>
+      </div>
+    </div>
+
+    <div class="card nested">
+      <div class="form-grid">
+        <select class="input" [(ngModel)]="createForm.tipo" name="tipo">
+          <option value="">Selecciona tipo</option>
+          <option value="averia">Avería</option>
+          <option value="accidente">Accidente</option>
+          <option value="otro">Otro</option>
+        </select>
+
+        <select class="input" [(ngModel)]="createForm.vehiculo_id" name="vehiculo">
+          <option value="">Selecciona vehículo (opcional)</option>
+          <option *ngFor="let v of myVehiculos" [value]="v.id">{{ v.marca }} {{ v.modelo }} - {{ v.placa }}</option>
+        </select>
+
+        <textarea class="input" [(ngModel)]="createForm.descripcion" name="descripcion" placeholder="Descripción del problema"></textarea>
+
+        <div>
+          <label class="label">Ubicación</label>
+          <div style="display:flex;gap:0.5rem;align-items:center">
+            <input class="input" [(ngModel)]="createForm.latitud" name="lat" placeholder="Latitud" />
+            <input class="input" [(ngModel)]="createForm.longitud" name="lon" placeholder="Longitud" />
+            <button class="btn btn-ghost" type="button" (click)="setLocationFromGeolocation()">Usar mi ubicación</button>
+          </div>
+        </div>
+
+        <div>
+          <label class="label">Evidencias (fotos)</label>
+          <input type="file" (change)="onEvidenciaFiles($event)" multiple />
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-primary" type="button" (click)="createIncident()" [disabled]="creating">
+          {{ creating ? 'Enviando...' : 'Enviar solicitud' }}
+        </button>
+        <button class="btn btn-ghost" type="button" (click)="resetCreateForm()">Cancelar</button>
+      </div>
+    </div>
+  </section>
+
+  
+  <!-- Sección: Lista de incidentes (Admin: dos listas) -->
+  <ng-container *ngIf="isAdminView">
+    <!-- ADMIN: Solicitudes nuevas -->
+    <section class="section incidents-list">
+      <div class="section-head">
+        <div>
+          <h3>Solicitudes nuevas</h3>
+          <p class="subtitle">Pendientes, asignadas o en proceso - {{ incidentsNuevas.length }} solicitud(es)</p>
+        </div>
+        <button class="btn btn-ghost" (click)="cargarIncidentes()" [disabled]="loading">
+          {{ loading ? 'Cargando...' : 'Actualizar' }}
+        </button>
+      </div>
+
+      <div *ngIf="loading" class="loading">Cargando incidentes...</div>
+      <div *ngIf="!loading && incidentsNuevas.length === 0" class="empty">
+        <p>No hay solicitudes nuevas</p>
+      </div>
+
+      <div *ngIf="!loading && incidentsNuevas.length > 0" class="incidents-grid">
+        <div *ngFor="let incidente of incidentsNuevas" class="incident-card" [class.assigned]="incidente.estado !== 'pendiente'">
+          <!-- Header de la card -->
+          <div class="card-header">
+            <div class="tipo-prioridad">
+              <h4>{{ incidente.tipo }}</h4>
+              <span class="priority-badge" [style.background]="getPriorityColor(incidente.prioridad)">
+                P{{ incidente.prioridad || '-' }}
+              </span>
+            </div>
+            <span class="estado-badge" [ngClass]="'estado-' + (incidente.estado || 'pendiente')">
+              {{ incidente.estado || 'pendiente' }}
+            </span>
+          </div>
+
+          <!-- Contenido de la card -->
+          <div class="card-content">
+            <p class="descripcion">{{ incidente.descripcion }}</p>
+
+            <!-- Grid de información -->
+            <div class="info-grid">
+              <div class="info-item">
+                <span class="label">Vehículo</span>
+                <span class="value">{{ incidente.vehiculo_id || 'N/A' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="label">Ubicación</span>
+                <span class="value coords">
+                  {{ incidente.latitud?.toFixed(4) || '-' }},
+                  {{ incidente.longitud?.toFixed(4) || '-' }}
+                </span>
+              </div>
+              <div class="info-item">
+                <span class="label">Fecha</span>
+                <span class="value">{{ incidente.creado_en | date:'short' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="label">ID</span>
+                <span class="value">{{ incidente.id }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Botones de acción -->
+          <div class="card-actions">
+            <!-- SOLO CUANDO ESTÁ PENDIENTE: Solo botón Aceptar -->
+            <ng-container *ngIf="incidente.estado === 'pendiente'">
+              <button class="btn btn-primary" (click)="aceptarSolicitud(incidente)">
+                ✓ Aceptar Solicitud
+              </button>
+            </ng-container>
+
+            <!-- DESPUÉS DE ACEPTAR: Mostrar los demás botones -->
+            <ng-container *ngIf="incidente.estado !== 'pendiente'">
+              <button class="btn btn-secondary" (click)="abrirMapa(incidente)">
+                📍 Ver en mapa
+              </button>
+              <button class="btn btn-ghost" (click)="verTracking(incidente)">
+                📊 Ver tracking
+              </button>
+              <!-- Mostrar botón Asignar solo si ya fue aceptada por esta empresa -->
+              <button class="btn btn-primary" *ngIf="incidente.estado === 'aceptada' && incidente.accepted_empresa_id === auth.currentUser?.empresa_id" (click)="abrirModalAsignar(incidente)">
+                👤 Asignar técnico
+              </button>
+              <button class="btn btn-danger" *ngIf="incidente.estado === 'aceptada' && incidente.accepted_empresa_id === auth.currentUser?.empresa_id" (click)="cancelarAceptacion(incidente)">
+                ✖ Cancelar servicio
+              </button>
+            </ng-container>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ADMIN: Solicitudes atendidas -->
+    <section class="section incidents-list">
+      <div class="section-head">
+        <div>
+          <h3>Solicitudes atendidas</h3>
+          <p class="subtitle">Cerradas o finalizadas - {{ incidentsAtendidas.length }} solicitud(es)</p>
+        </div>
+      </div>
+
+      <div *ngIf="!loading && incidentsAtendidas.length === 0" class="empty">
+        <p>No hay solicitudes atendidas</p>
+      </div>
+
+      <div *ngIf="!loading && incidentsAtendidas.length > 0" class="incidents-grid">
+        <div *ngFor="let incidente of incidentsAtendidas" class="incident-card assigned">
+          <!-- Header de la card -->
+          <div class="card-header">
+            <div class="tipo-prioridad">
+              <h4>{{ incidente.tipo }}</h4>
+              <span class="priority-badge" [style.background]="getPriorityColor(incidente.prioridad)">
+                P{{ incidente.prioridad || '-' }}
+              </span>
+            </div>
+            <span class="estado-badge" [ngClass]="'estado-' + (incidente.estado || 'pendiente')">
+              {{ incidente.estado || 'pendiente' }}
+            </span>
+          </div>
+
+          <!-- Contenido de la card -->
+          <div class="card-content">
+            <p class="descripcion">{{ incidente.descripcion }}</p>
+
+            <!-- Grid de información -->
+            <div class="info-grid">
+              <div class="info-item">
+                <span class="label">Vehículo</span>
+                <span class="value">{{ incidente.vehiculo_id || 'N/A' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="label">Ubicación</span>
+                <span class="value coords">
+                  {{ incidente.latitud?.toFixed(4) || '-' }},
+                  {{ incidente.longitud?.toFixed(4) || '-' }}
+                </span>
+              </div>
+              <div class="info-item">
+                <span class="label">Fecha</span>
+                <span class="value">{{ incidente.creado_en | date:'short' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="label">ID</span>
+                <span class="value">{{ incidente.id }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Botones de acción -->
+          <div class="card-actions">
+            <button class="btn btn-secondary" (click)="abrirMapa(incidente)">
+              📍 Ver en mapa
+            </button>
+            <button class="btn btn-ghost" (click)="verTracking(incidente)">
+              📊 Ver tracking
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </ng-container>
+
+  <!-- Sección: Lista de incidentes (Cliente/Empleado) -->
+  <section class="section incidents-list" *ngIf="!isAdminView">
+    <div class="section-head">
+      <div>
+        <h3>{{ incidentsSectionTitle }}</h3>
+        <p class="subtitle">{{ incidentsCounterLabel }}</p>
+      </div>
+      <button class="btn btn-ghost" (click)="cargarIncidentes()" [disabled]="loading">
+        {{ loading ? 'Cargando...' : 'Actualizar' }}
+      </button>
+    </div>
+
+    <div *ngIf="loading" class="loading">{{ loadingMessage }}</div>
+    <div *ngIf="!loading && incidents.length === 0" class="empty">
+      <p>{{ emptyMessage }}</p>
+    </div>
+
+    <div *ngIf="!loading && incidents.length > 0" class="incidents-grid">
+      <div *ngFor="let incidente of incidents" class="incident-card" [class.assigned]="incidente.estado !== 'pendiente'">
+        <!-- Header de la card -->
+        <div class="card-header">
+          <div class="tipo-prioridad">
+            <h4>{{ incidente.tipo }}</h4>
+            <span class="priority-badge" [style.background]="getPriorityColor(incidente.prioridad)">
+              P{{ incidente.prioridad || '-' }}
+            </span>
+          </div>
+          <span class="estado-badge" [ngClass]="'estado-' + (incidente.estado || 'pendiente')">
+            {{ incidente.estado || 'pendiente' }}
+          </span>
+        </div>
+
+        <!-- Contenido de la card -->
+        <div class="card-content">
+          <p class="descripcion">{{ incidente.descripcion }}</p>
+
+          <!-- Grid de información -->
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="label">Vehículo</span>
+              <span class="value">{{ incidente.vehiculo_id || 'N/A' }}</span>
+            </div>
+            <div class="info-item">
+              <span class="label">Ubicación</span>
+              <span class="value coords">
+                {{ incidente.latitud?.toFixed(4) || '-' }},
+                {{ incidente.longitud?.toFixed(4) || '-' }}
+              </span>
+            </div>
+            <div class="info-item">
+              <span class="label">Fecha</span>
+              <span class="value">{{ incidente.creado_en | date:'short' }}</span>
+            </div>
+            <div class="info-item">
+              <span class="label">ID</span>
+              <span class="value">{{ incidente.id }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Botones de acción -->
+        <div class="card-actions">
+          <button class="btn btn-secondary" (click)="abrirMapa(incidente)">
+            📍 Ver en mapa
+          </button>
+          <button
+            class="btn btn-primary"
+            (click)="abrirModalAsignar(incidente)"
+            [disabled]="incidente.estado !== 'pendiente'"
+            *ngIf="isAdminView"
+          >
+            👤 Asignar técnico
+          </button>
+          <button class="btn btn-ghost" (click)="verTracking(incidente)">
+            📊 Ver tracking
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Modal: Asignar técnico -->
+  <div *ngIf="modalAsignarVisible" class="modal-overlay" (click)="cerrarModalAsignar()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Asignar Técnico</h3>
+        <button class="btn-close" (click)="cerrarModalAsignar()">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div *ngIf="modalIncidentes">
+          <p class="incidente-info">
+            <strong>{{ modalIncidentes.tipo }}</strong> - {{ modalIncidentes.descripcion }}
+          </p>
+
+          <div class="service-picker">
+            <label for="servicioAsignado">Servicio</label>
+            <select id="servicioAsignado" [(ngModel)]="servicioSeleccionadoId">
+              <option value="">Selecciona un servicio</option>
+              <option *ngFor="let servicio of servicios" [value]="servicio.id_servicio">
+                {{ servicio.nombre }}
+              </option>
+            </select>
+          </div>
+
+          <div *ngIf="cargandoTecnicos" class="loading">Cargando técnicos cercanos...</div>
+
+          <div *ngIf="!cargandoTecnicos && tecnicosCercanos.length === 0" class="empty-tecnico">
+            No hay técnicos disponibles cerca de esta ubicación
+          </div>
+
+          <div *ngIf="!cargandoTecnicos && tecnicosCercanos.length > 0" class="tecnicos-list">
+            <div *ngFor="let tecnico of tecnicosCercanos" class="tecnico-item">
+              <div class="tecnico-info">
+                <div class="tecnico-header">
+                  <strong>{{ tecnico.nombre_completo || 'Sin nombre' }}</strong>
+                  <span class="disponibilidad disponible">
+                    Disponible
+                  </span>
+                </div>
+                <div class="tecnico-details">
+                  <span>Distancia: <strong>{{ tecnico.distancia_km.toFixed(1) }} km</strong></span>
+                </div>
+              </div>
+              <button
+                class="btn btn-primary"
+                (click)="confirmarAsignacion(tecnico)"
+                [disabled]="asignando"
+              >
+                {{ asignando ? 'Asignando...' : 'Asignar' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-ghost" (click)="cerrarModalAsignar()">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mensaje -->
+  <div *ngIf="message" class="alert" [class.success]="messageType === 'success'" [class.error]="messageType === 'error'">
+    {{ message }}
+  </div>
+</div>
+

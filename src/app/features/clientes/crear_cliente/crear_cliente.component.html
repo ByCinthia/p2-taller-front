@@ -1,0 +1,65 @@
+<section class="card page-block">
+  <header class="head">
+    <div>
+      <h2>Nuevo cliente</h2>
+      <p class="muted">Completa los datos del cliente.</p>
+    </div>
+    <a routerLink="/app/clientes" class="btn btn-ghost">Volver al listado</a>
+  </header>
+
+  <p class="error" *ngIf="errorMsg">{{ errorMsg }}</p>
+
+  <form class="card inner" [formGroup]="form" (ngSubmit)="submit()">
+    <h3>Datos del cliente</h3>
+    <div class="form-grid">
+      <div>
+        <label class="label">Nombre</label>
+        <input class="input" formControlName="nombre" />
+        <div class="error" *ngIf="isInvalid('nombre')">Nombre requerido (max 120).</div>
+      </div>
+
+      <div>
+        <label class="label">Usuario</label>
+        <input class="input" formControlName="username" autocomplete="username" />
+        <div class="error" *ngIf="isInvalid('username')">Usuario requerido (min 4, max 120).</div>
+      </div>
+
+      <div>
+        <label class="label">Contrasena</label>
+        <input class="input" type="password" formControlName="password" autocomplete="new-password" />
+        <div class="error" *ngIf="isInvalid('password')">Contrasena requerida (min 8).</div>
+      </div>
+
+      <div>
+        <label class="label">Confirmar contrasena</label>
+        <input class="input" type="password" formControlName="password_confirm" autocomplete="new-password" />
+        <div class="error" *ngIf="passwordMismatch">Las contrasenas no coinciden.</div>
+      </div>
+
+      <div>
+        <label class="label">Correo</label>
+        <input class="input" formControlName="email" type="email" />
+        <div class="error" *ngIf="isInvalid('email')">Correo invalido.</div>
+      </div>
+
+      <div>
+        <label class="label">Telefono</label>
+        <input class="input" formControlName="telefono" />
+        <div class="error" *ngIf="isInvalid('telefono')">Telefono demasiado largo.</div>
+      </div>
+    </div>
+
+    <label style="display:flex; align-items:center; gap:0.5rem;">
+      <input type="checkbox" formControlName="activo" />
+      Cliente activo
+    </label>
+
+    <div class="actions">
+      <a routerLink="/app/clientes" class="btn btn-ghost">Cancelar</a>
+      <button type="submit" class="btn btn-primary" [disabled]="loading">
+        {{ loading ? 'Guardando...' : 'Guardar cliente' }}
+      </button>
+    </div>
+  </form>
+</section>
+

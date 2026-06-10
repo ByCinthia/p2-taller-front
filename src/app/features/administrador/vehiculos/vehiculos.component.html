@@ -1,0 +1,24 @@
+<div class="card">
+  <header class="head">
+    <h3>Vehículos</h3>
+  </header>
+
+  <div *ngIf="loading" class="muted">Cargando vehículos...</div>
+  <div *ngIf="!loading && vehiculos.length === 0" class="muted">No hay vehículos.</div>
+
+  <ul>
+    <li *ngFor="let v of vehiculos" class="veh-row">
+      <div>
+        <strong>{{ v.marca }} {{ v.modelo }}</strong>
+        <div class="muted">Placa: {{ v.placa }} • Año: {{ v.anio }}</div>
+        <div class="muted">Cliente: {{ v.cliente_nombre || v.cliente_id }}</div>
+      </div>
+      <div style="display:flex;gap:0.5rem">
+        <button class="btn btn-ghost" (click)="edit(v)">Editar</button>
+        <button class="btn" (click)="makePrincipal(v)">{{ v.principal ? 'Principal' : 'Hacer principal' }}</button>
+        <button class="btn btn-ghost" (click)="remove(v)">Eliminar</button>
+      </div>
+    </li>
+  </ul>
+</div>
+

@@ -1,0 +1,10 @@
+.page-block { padding: 1rem; }
+.head { display:flex; justify-content:space-between; align-items:center; }
+.muted { color: var(--muted); }
+.list { display:grid; gap:0.6rem; margin-top:1rem; }
+.card { padding:0.75rem; border:1px solid var(--line); border-radius:8px; }
+.row { display:flex; justify-content:space-between; align-items:center; }
+.right { text-align:right; }
+.desc { margin:0.5rem 0 0 0; color:var(--text-secondary); }
+.badge.estado { background:#f3f4f6; padding:0.25rem 0.5rem; border-radius:6px; font-weight:600; }
+

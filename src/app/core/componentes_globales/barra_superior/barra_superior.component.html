@@ -1,0 +1,21 @@
+<header class="card topbar">
+  <div>
+    <strong>{{ auth.isClient ? 'Portal de cliente' : 'Panel de gestion' }}</strong>
+    <p class="muted">
+      {{ auth.isClient ? 'Gestiona tu perfil, vehiculos e incidentes' : 'Administracion de usuarios, roles y permisos' }}
+    </p>
+  </div>
+
+  <div class="right-section" *ngIf="auth.currentUser as user">
+    <button class="notification-bell-btn" (click)="verNotificaciones()" title="Ver Notificaciones">
+      <span class="bell-icon">🔔</span>
+      <span class="notification-badge" *ngIf="(unreadCount$ | async) as count">{{ count }}</span>
+    </button>
+
+    <div class="user">
+      <span>{{ user.nombre_completo }}</span>
+      <span class="badge">{{ user.username }}</span>
+    </div>
+  </div>
+</header>
+

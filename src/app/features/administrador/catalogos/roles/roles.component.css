@@ -1,0 +1,47 @@
+.page-block {
+  padding: 1rem;
+}
+
+.head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.inner {
+  padding: 1rem;
+  margin: 1rem 0;
+}
+
+.actions {
+  display: flex;
+  gap: 0.6rem;
+  margin-top: 1rem;
+}
+
+.perm-grid {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0.7rem;
+  max-height: 260px;
+  overflow: auto;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.perm-row {
+  display: grid;
+  grid-template-columns: 24px 170px 1fr;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.badge {
+  margin-right: 0.35rem;
+  margin-bottom: 0.2rem;
+}
+

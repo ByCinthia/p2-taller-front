@@ -1,0 +1,31 @@
+<div class="tracking-container">
+  <div class="tracking-card glass">
+    <div class="card-header">
+      <div class="status-indicator">
+        <span class="pulse-dot" [ngClass]="{'connected': isConnected}"></span>
+        <span class="status-text">{{ isConnected ? 'Seguimiento en Vivo Activo' : 'Buscando señal de transmisión...' }}</span>
+      </div>
+      <div class="incident-badge" *ngIf="incidenteId">Auxilio #{{ incidenteId | slice:0:8 }}</div>
+    </div>
+
+    <div class="card-content">
+      <div #mapContainer class="map-canvas"></div>
+    </div>
+
+    <div class="card-footer" *ngIf="technicianLat !== null">
+      <div class="info-row">
+        <div class="info-item">
+          <span class="info-label">Latitud del Técnico</span>
+          <span class="info-value">{{ technicianLat | number:'1.6-6' }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Longitud del Técnico</span>
+          <span class="info-value">{{ technicianLng | number:'1.6-6' }}</span>
+        </div>
+      </div>
+      <div class="timestamp-row" *ngIf="lastUpdated">
+        <span class="clock-icon">🕒</span> Ubicación actualizada a las: {{ lastUpdated | date:'mediumTime' }}
+      </div>
+    </div>
+  </div>
+</div>

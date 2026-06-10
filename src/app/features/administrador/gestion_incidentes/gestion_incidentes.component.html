@@ -1,0 +1,226 @@
+<div class="card">
+  <header class="head">
+    <h3>{{ isClient && showIncidentList ? 'Incidentes' : isClient ? 'Solicitud de Auxilio' : 'Incidentes y Ubicaciones (Realtime)' }}</h3>
+  </header>
+
+  <section class="panel" style="margin-bottom: 1rem;" *ngIf="!isClient || !showIncidentList">
+    <h4>{{ isClient ? 'Solicitud de Auxilio' : 'Nuevo incidente / Solicitud de auxilio' }}</h4>
+
+    <ng-container *ngIf="isClient; else staffIncidentForm">
+      <div class="request-layout">
+        <div class="map-stack">
+          <div class="section-caption">
+            <strong>Mapa de ubicación</strong>
+            <span class="muted">Tu ubicación actual en vivo aparece en rojo.</span>
+          </div>
+          <div #reportMap class="map-canvas map-large"></div>
+          <div class="muted tiny">Ubicación actual sincronizada.</div>
+          <div style="display:flex; gap:0.5rem; flex-wrap: wrap;">
+            <button class="btn btn-ghost" (click)="useBrowserLocationForIncident()">Recentrar mi ubicación</button>
+            <button class="btn btn-ghost" [class.active]="watchPositionId != null" (click)="toggleRealtimeLocation()">
+              {{ watchPositionId == null ? 'Activar ubicación en tiempo real' : 'Detener ubicación en tiempo real' }}
+            </button>
+          </div>
+        </div>
+
+        <div class="request-form-card">
+          <div class="stack-gap">
+            <div>
+              <label class="label">Vehículo</label>
+              <select class="input input-lg" [(ngModel)]="createForm.vehiculo_id">
+                <option value="">Selecciona un vehículo</option>
+                <option *ngFor="let v of myVehicles" [value]="v.id">{{ v.marca || 'N/A' }} {{ v.modelo || '' }} - {{ v.placa || 'N/A' }}</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="label">Tipo de falla o incidente</label>
+              <input class="input input-lg" [(ngModel)]="createForm.tipo" placeholder="Pinchazo, batería, grúa, motor, etc." />
+            </div>
+
+            <div>
+              <label class="label">Descripción del detalle del incidente</label>
+              <textarea
+                class="input text-area"
+                [(ngModel)]="createForm.descripcion"
+                rows="9"
+                placeholder="Describe el incidente con detalle. También puedes grabar voz abajo."></textarea>
+              <div class="voice-controls">
+                <button class="btn btn-primary" type="button" [class.active]="recordingVoice" (click)="toggleVoiceRecording()">
+                  {{ recordingVoice ? 'Detener grabación' : 'Grabar voz' }}
+                </button>
+                <span class="muted tiny" *ngIf="recordingVoice">Grabando audio...</span>
+                <span class="muted tiny" *ngIf="audioEvidenceFile">Audio listo: {{ audioEvidenceFile.name }}</span>
+              </div>
+              <audio *ngIf="voicePreviewUrl" [src]="voicePreviewUrl" controls style="width: 100%; margin-top: 0.6rem;"></audio>
+            </div>
+
+            <section class="evidence-box">
+              <button class="btn btn-ghost" type="button" [class.active]="showEvidencePanel" (click)="showEvidencePanel = !showEvidencePanel">Agregar evidencias</button>
+              <div *ngIf="showEvidencePanel" class="evidence-panel">
+                <div>
+                  <label class="label">Imágenes</label>
+                  <input class="input input-file" type="file" accept="image/*" multiple (change)="onImageEvidenceSelected($event)" />
+                </div>
+                <div class="muted tiny" *ngIf="imageEvidenceFiles.length > 0">Imágenes seleccionadas: {{ imageEvidenceFiles.length }}</div>
+              </div>
+            </section>
+
+            <div style="display:flex; gap:0.5rem; flex-wrap: wrap;">
+              <button class="btn btn-primary btn-submit" type="button" (click)="createIncident()">Enviar Solicitud de Auxilio</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+
+    <ng-template #staffIncidentForm>
+      <div class="form-grid">
+        <input class="input" [(ngModel)]="createForm.tipo" placeholder="Tipo (grúa, batería, pinchazo...)" />
+        <input class="input" [(ngModel)]="createForm.descripcion" placeholder="Descripción" />
+        <input class="input" [(ngModel)]="createForm.vehiculo_id" placeholder="Vehículo ID (opcional)" />
+        <input class="input" [(ngModel)]="createForm.prioridad" type="number" min="1" max="5" placeholder="Prioridad (1-5)" />
+        <input class="input" [(ngModel)]="createForm.latitud" type="number" step="0.000001" placeholder="Latitud" />
+        <input class="input" [(ngModel)]="createForm.longitud" type="number" step="0.000001" placeholder="Longitud" />
+      </div>
+      <div class="muted" style="margin-top: 0.5rem;">
+        Mi posición actual: {{ currentLat ?? 'N/A' }}, {{ currentLng ?? 'N/A' }}
+      </div>
+      <div #reportMap class="map-canvas" style="margin-top: 0.75rem;"></div>
+      <div style="display:flex; gap:0.5rem; margin-top:0.75rem; flex-wrap: wrap;">
+        <button class="btn" (click)="useBrowserLocationForIncident()">Usar mi ubicación</button>
+        <button class="btn btn-ghost" (click)="toggleRealtimeLocation()">
+          {{ watchPositionId == null ? 'Iniciar ubicación en tiempo real' : 'Detener ubicación en tiempo real' }}
+        </button>
+      </div>
+    </ng-template>
+
+  </section>
+
+  <section class="panel" *ngIf="isClient && showIncidentList">
+    <div class="section-head" style="margin-bottom: 0.75rem;">
+      <div>
+        <h4>Incidentes</h4>
+        <p class="muted">Historial y seguimiento de tus solicitudes.</p>
+      </div>
+      <button class="btn btn-ghost" type="button" (click)="load()">Actualizar</button>
+    </div>
+
+    <div *ngIf="loading" class="muted">Cargando incidentes...</div>
+    <div *ngIf="!loading && incidents.length === 0" class="muted">No hay incidentes.</div>
+
+    <ul *ngIf="incidents.length > 0">
+      <li *ngFor="let it of incidents" class="incident-row">
+        <div>
+          <strong>{{ it.tipo || 'Incidente' }}</strong>
+          <div class="muted">{{ it.descripcion }}</div>
+          <div class="muted">Estado: {{ it.estado }}</div>
+        </div>
+        <div style="display:flex; gap:0.5rem; flex-wrap: wrap; justify-content:flex-end;">
+          <button class="btn btn-ghost" (click)="openTracking(it)">Ver tracking</button>
+        </div>
+      </li>
+    </ul>
+  </section>
+
+  <section class="panel" style="margin-bottom: 1rem;" *ngIf="!isClient">
+    <h4>Mi ubicación (técnico)</h4>
+    <div style="display:flex; gap:0.5rem; flex-wrap: wrap; align-items: center;">
+      <label>Disponible <input type="checkbox" [(ngModel)]="miDisponible" /></label>
+      <button class="btn" (click)="actualizarMiUbicacion()">Actualizar ubicación actual</button>
+    </div>
+  </section>
+
+  <section class="panel" style="margin-bottom: 1rem;" *ngIf="selectedTracking">
+    <h4>Tracking del incidente {{ selectedTracking.incidente_id }}</h4>
+    <div class="muted">
+      Estado: {{ selectedTracking.estado }}
+      • Destino: {{ selectedTracking.latitud_incidente ?? 'N/A' }}, {{ selectedTracking.longitud_incidente ?? 'N/A' }}
+    </div>
+    <div class="muted">
+      Técnico: {{ selectedTracking.tecnico_nombre || 'Sin asignar' }}
+      • Posición: {{ selectedTracking.tecnico_latitud ?? 'N/A' }}, {{ selectedTracking.tecnico_longitud ?? 'N/A' }}
+    </div>
+    <div style="display:flex; gap:0.5rem; margin-top:0.75rem;">
+      <button class="btn" (click)="refreshTracking()">Refrescar tracking</button>
+      <button class="btn" (click)="toggleTrackingSocket()">
+        {{ trackingSocketConnected ? 'Desconectar WS' : 'Conectar WS' }}
+      </button>
+      <button class="btn btn-ghost" (click)="buscarTecnicosCercanosTracking()" *ngIf="!isClient">Buscar técnicos cercanos</button>
+    </div>
+    <div class="muted" style="margin-top: 0.5rem;">WebSocket: {{ trackingSocketConnected ? 'conectado' : 'desconectado' }}</div>
+    <div #trackingMap class="map-canvas" style="margin-top: 0.75rem;"></div>
+    <ul *ngIf="tecnicosCercanos.length" style="margin-top:0.75rem;">
+      <li *ngFor="let t of tecnicosCercanos" class="muted">
+        {{ t.nombre_completo }} - {{ t.distancia_km }} km - {{ t.disponible ? 'disponible' : 'ocupado' }}
+      </li>
+    </ul>
+  </section>
+
+  <!-- Incidents list shown only as a separate section (not inside the Solicitud form) -->
+  <section class="panel" *ngIf="!isClient">
+    <h4>Incidentes</h4>
+    <div *ngIf="loading" class="muted">Cargando incidentes...</div>
+    <div *ngIf="!loading && incidents.length === 0" class="muted">No hay incidentes.</div>
+
+    <!-- Pending requests needing acceptance (highlighted) -->
+    <div *ngIf="!loading && pendingIncidents.length > 0">
+      <h5 style="color: var(--brand); margin: 1rem 0 0.5rem 0;">📢 Nuevas solicitudes esperando aceptación</h5>
+      <ul>
+        <li *ngFor="let it of pendingIncidents" 
+            style="margin:0.75rem 0; padding:1rem; border-left: 4px solid var(--brand); background-color: rgba(var(--brand-rgb), 0.05); display:flex; justify-content:space-between; align-items:flex-start; gap:1rem;">
+          <div style="flex:1;">
+            <strong style="font-size:1.05rem;">{{ it.tipo || 'Incidente' }}</strong>
+            <div class="muted" style="margin-top:0.25rem;">{{ it.descripcion }}</div>
+            <div class="muted tiny" style="margin-top:0.25rem;">Prioridad: {{ it.prioridad || 'N/A' }} • Ubicación: {{ it.latitud | number:'1.0-4' }}, {{ it.longitud | number:'1.0-4' }}</div>
+          </div>
+          <div style="display:flex;gap:0.5rem;flex-wrap:wrap;justify-content:flex-end;">
+            <button class="btn btn-primary" (click)="acceptIncident(it)">✓ Aceptar Solicitud</button>
+            <button class="btn btn-ghost" *ngIf="it.estado !== 'pendiente'" (click)="openTracking(it)">Ver ubicación</button>
+            <button class="btn btn-danger" *ngIf="it.estado === 'aceptada' && it.accepted_empresa_id === auth.currentUser?.empresa_id" (click)="cancelarAceptacion(it)">
+                ✖ Cancelar servicio
+              </button>
+          </div>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Other incidents -->
+    <div *ngIf="!loading && otherIncidents.length > 0">
+      <h5 style="margin: 1.5rem 0 0.5rem 0;">Otras solicitudes</h5>
+      <ul>
+        <li *ngFor="let it of otherIncidents" style="margin:0.5rem 0; display:flex; justify-content:space-between; align-items:center">
+          <div>
+            <strong>{{ it.tipo || 'Incidente' }}</strong>
+            <div class="muted">{{ it.descripcion }}</div>
+            <div class="muted">Estado: {{ it.estado }} • Prioridad: {{ it.prioridad || 'N/A' }}</div>
+            <div class="muted">Destino: {{ it.latitud ?? 'N/A' }}, {{ it.longitud ?? 'N/A' }}</div>
+            <div class="muted">Técnico asignado: Ver asignación</div>
+          </div>
+          <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;justify-content:flex-end;">
+            <select [(ngModel)]="it.estado">
+              <option value="pendiente">pendiente</option>
+              <option value="aceptada">aceptada</option>
+              <option value="asignada">asignada</option>
+              <option value="en_proceso">en_proceso</option>
+              <option value="completada">completada</option>
+              <option value="atendido">atendido</option>
+            </select>
+            <button class="btn" (click)="saveStatus(it)">Guardar</button>
+            <!-- Mostrar controles de asignación solo si la solicitud fue aceptada por esta empresa -->
+            <ng-container *ngIf="it.estado === 'aceptada' && it.accepted_empresa_id === auth.currentUser?.empresa_id">
+              <input [(ngModel)]="asignaciones[it.id]" placeholder="empleado_id" />
+              <button class="btn btn-ghost" (click)="assignTecnico(it)">Asignar técnico</button>
+            </ng-container>
+            <button class="btn btn-ghost" (click)="openTracking(it)">Ver tracking</button>
+            <button class="btn btn-ghost" (click)="addDiagPrompt(it)">Añadir diagnóstico</button>
+            <button class="btn btn-ghost" (click)="addEvidPrompt(it)">Añadir evidencia</button>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <div *ngIf="message" class="muted" style="margin-top:1rem;">{{ message }}</div>
+</div>
+

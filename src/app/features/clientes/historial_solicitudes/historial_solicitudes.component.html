@@ -1,0 +1,42 @@
+<section class="card page-block">
+  <header class="head">
+    <div>
+      <h2>Seguimiento de Solicitud</h2>
+      <p class="muted">Historial y estado de tus solicitudes de auxilio.</p>
+    </div>
+    <button class="btn btn-ghost" (click)="load()">Actualizar</button>
+  </header>
+
+  <p class="error" *ngIf="errorMsg">{{ errorMsg }}</p>
+
+  <div *ngIf="loading" class="muted">Cargando solicitudes...</div>
+  <div *ngIf="!loading && incidents.length === 0" class="muted">No tienes solicitudes registradas.</div>
+
+  <div class="incidents-list" *ngIf="!loading && incidents.length > 0">
+    <article class="incident-card" *ngFor="let inc of incidents">
+      <div class="incident-header">
+        <div>
+          <h4>{{ inc.tipo || 'Solicitud de Auxilio' }}</h4>
+          <p class="muted">{{ inc.descripcion || 'Sin descripción' }}</p>
+        </div>
+        <span class="badge" [class.badge--pending]="inc.estado === 'pendiente'" 
+              [class.badge--processing]="inc.estado === 'en_proceso'"
+              [class.badge--completed]="inc.estado === 'atendido'">
+          {{ inc.estado || 'N/A' }}
+        </span>
+      </div>
+
+      <div class="incident-details">
+        <div><span class="label">Tipo:</span> {{ inc.tipo || 'N/A' }}</div>
+        <div><span class="label">Prioridad:</span> {{ inc.prioridad || 'N/A' }}</div>
+        <div><span class="label">Ubicación:</span> {{ inc.latitud | number: '0.0000' }}, {{ inc.longitud | number: '0.0000' }}</div>
+        <div><span class="label">Creado:</span> {{ inc.creado_en | date: 'short' }}</div>
+      </div>
+
+      <div class="incident-actions">
+        <button class="btn btn-primary" (click)="viewTracking(inc.id)">Ver Seguimiento</button>
+      </div>
+    </article>
+  </div>
+</section>
+

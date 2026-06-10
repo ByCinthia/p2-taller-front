@@ -1,0 +1,43 @@
+.home-wrap {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+}
+
+.home-card {
+  width: min(620px, 95vw);
+  padding: 1.5rem;
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--brand-2);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.78rem;
+}
+
+h1 {
+  margin: 0.35rem 0 0;
+}
+
+.muted {
+  color: var(--muted);
+  margin-bottom: 1.2rem;
+}
+
+.actions {
+  display: flex;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+.actions .btn {
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+

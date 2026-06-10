@@ -1,0 +1,117 @@
+<section class="panel-wrap">
+  <header class="hero card">
+    <div>
+      <p class="eyebrow">Panel de empleado</p>
+      <h2>{{ empleado?.nombre_completo || auth.currentUser?.nombre_completo || 'Mi panel' }}</h2>
+      <p class="muted">
+        Revisa tu información personal.
+      </p>
+    </div>
+  </header>
+
+  <p class="error" *ngIf="errorMsg">{{ errorMsg }}</p>
+
+  <!-- SECCIÓN: MI PERFIL -->
+  <div class="grid">
+    <article class="card block">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">Perfil</p>
+          <h3>Mi información</h3>
+        </div>
+        <span class="badge" [class.badge--ok]="!!empleado">Empleado</span>
+      </div>
+
+      <div *ngIf="loadingProfile" class="muted">Cargando perfil...</div>
+
+      <div *ngIf="!loadingProfile && empleado as e" class="profile-grid">
+        <div><span class="label">Nombre</span><strong>{{ e.nombre_completo }}</strong></div>
+        <div><span class="label">Usuario</span><strong>{{ e.usuario.username }}</strong></div>
+        <div><span class="label">Correo</span><strong>{{ e.usuario.email || 'N/A' }}</strong></div>
+        <div><span class="label">Teléfono</span><strong>{{ e.telefono || 'N/A' }}</strong></div>
+        <div><span class="label">CI</span><strong>{{ e.ci }}</strong></div>
+        <div><span class="label">Cargo</span><strong>{{ e.cargo_nombre || 'N/A' }}</strong></div>
+        <div><span class="label">Empresa</span><strong>{{ e.empresa }}</strong></div>
+        <div><span class="label">Sueldo</span><strong>{{ e.sueldo || '0' }}</strong></div>
+      </div>
+    </article>
+  </div>
+
+  <!-- SECCIÓN: NOTIFICACIONES -->
+  <div class="grid">
+    <article class="card block">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">Notificaciones</p>
+          <h3>Tus avisos recientes</h3>
+        </div>
+        <button *ngIf="notifications.length > 0" class="btn-small" (click)="loadNotifications()">
+          Actualizar
+        </button>
+      </div>
+
+      <div *ngIf="loadingNotifications" class="muted">Cargando notificaciones...</div>
+
+      <div *ngIf="!loadingNotifications && notifications.length === 0" class="muted">
+        No tienes notificaciones.
+      </div>
+
+      <div *ngIf="!loadingNotifications && notifications.length > 0" class="notifications-list">
+        <div
+          *ngFor="let notif of notifications"
+          class="notification-item"
+          [class.unread]="!notif.leida"
+          (click)="showNotificationDetail(notif)"
+        >
+          <div class="notification-header">
+            <strong class="notification-title">{{ notif.titulo }}</strong>
+            <span class="notification-date">
+              {{ notif.creada_en | date: 'dd/MM/yyyy HH:mm' }}
+            </span>
+          </div>
+          <div class="notification-body">
+            {{ notif.mensaje }}
+          </div>
+          <div *ngIf="!notif.leida" class="badge badge--primary">Nuevo</div>
+        </div>
+      </div>
+    </article>
+  </div>
+
+  <!-- MODAL DE DETALLE -->
+  <div *ngIf="selectedNotification" class="modal-overlay" (click)="closeNotificationDetail()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Detalle de notificación</h3>
+        <button class="btn-close" (click)="closeNotificationDetail()">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="detail-section">
+          <span class="label">Título</span>
+          <p>{{ selectedNotification.titulo }}</p>
+        </div>
+
+        <div class="detail-section">
+          <span class="label">Mensaje</span>
+          <p>{{ selectedNotification.mensaje }}</p>
+        </div>
+
+        <div class="detail-section">
+          <span class="label">Fecha</span>
+          <p>{{ selectedNotification.creada_en | date: 'dd/MM/yyyy HH:mm:ss' }}</p>
+        </div>
+
+        <div class="detail-section">
+          <span class="label">Estado</span>
+          <p>{{ selectedNotification.leida ? 'Leída' : 'No leída' }}</p>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn" (click)="closeNotificationDetail()">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</section>
+

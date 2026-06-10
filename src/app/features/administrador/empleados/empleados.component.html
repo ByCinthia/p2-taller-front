@@ -1,0 +1,115 @@
+<section class="card page-block">
+  <header class="head">
+    <div>
+      <h2>Empleados</h2>
+      <p class="muted">Alta, edicion y baja de usuarios empleados.</p>
+    </div>
+    <a *ngIf="!isCreateView && canManage" [routerLink]="['/app/empleados/nuevo']" class="btn btn-primary">Registrar empleado</a>
+    <a *ngIf="isCreateView" [routerLink]="['/app/empleados']" class="btn btn-ghost">Volver al listado</a>
+  </header>
+
+  <p class="error" *ngIf="errorMsg">{{ errorMsg }}</p>
+
+  <form class="card inner" [formGroup]="form" (ngSubmit)="save()" *ngIf="canManage && isCreateView">
+    <h3>{{ editingId ? 'Editar empleado' : 'Nuevo empleado' }}</h3>
+
+    <div class="form-grid">
+      <div class="full-width">
+        <label class="label">Nombre completo <span style="color: red;">*</span></label>
+        <input class="input" formControlName="nombre_completo" />
+        <small class="error" *ngIf="form.get('nombre_completo')?.invalid && form.get('nombre_completo')?.touched">
+          Este campo es requerido
+        </small>
+      </div>
+
+      <div>
+        <label class="label">Email</label>
+        <input class="input" type="email" formControlName="email" />
+      </div>
+
+      <div>
+        <label class="label">CI</label>
+        <input class="input" formControlName="ci" />
+      </div>
+
+      <div>
+        <label class="label">Telefono</label>
+        <input class="input" formControlName="telefono" />
+      </div>
+
+      <div>
+        <label class="label">Direccion</label>
+        <input class="input" formControlName="direccion" />
+      </div>
+
+      <div>
+        <label class="label">Sueldo</label>
+        <input class="input" type="number" formControlName="sueldo" />
+      </div>
+
+      <div>
+        <label class="label">Cargo</label>
+        <select class="input" formControlName="cargo">
+          <option value="">Sin cargo</option>
+          <option *ngFor="let cargo of cargosCatalogo" [value]="cargo.id">
+            {{ cargo.nombre }}
+          </option>
+        </select>
+      </div>
+
+      <div>
+        <label class="label">Foto perfil (opcional)</label>
+        <input class="input" type="file" (change)="onFileChange($event)" accept="image/*" />
+      </div>
+    </div>
+
+    <fieldset class="roles-box">
+      <legend>Roles</legend>
+      <label *ngFor="let rol of rolesCatalogo" class="role-item">
+        <input
+          type="checkbox"
+          [checked]="selectedRoleIds.has(rol.id)"
+          (change)="toggleRole(rol.id, $event)"
+        />
+        <span>{{ rol.nombre }}</span>
+      </label>
+    </fieldset>
+
+    <div class="actions">
+      <button type="submit" class="btn btn-primary" [disabled]="loading || form.invalid">Guardar</button>
+      <button class="btn btn-ghost" type="button" (click)="resetForm()">Cancelar</button>
+    </div>
+  </form>
+
+  <table class="table" *ngIf="!isCreateView">
+    <div style="display:flex; justify-content:flex-end; margin-bottom:8px;">
+      <button class="btn btn-ghost" (click)="fetchAll()">Refrescar</button>
+    </div>
+    <thead>
+      <tr>
+        <th>Usuario</th>
+        <th>Nombre</th>
+        <th>Email</th>
+        <th>Cargo</th>
+        <th>Roles</th>
+        <th *ngIf="canManage">Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let emp of empleados">
+        <td>{{ emp.usuario.is_active ? emp.usuario.username : 'Pendiente activacion' }}</td>
+        <td>{{ emp.nombre_completo }}</td>
+        <td>{{ emp.usuario.email }}</td>
+        <td>{{ emp.cargo_nombre || 'N/A' }}</td>
+        <td>
+          <span class="badge" *ngFor="let r of emp.roles_asignados">{{ r.nombre }}</span>
+        </td>
+        <td *ngIf="canManage">
+          <button class="btn btn-ghost" (click)="openEdit(emp)">Editar</button>
+          <button class="btn btn-danger" (click)="remove(emp)">Eliminar</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+

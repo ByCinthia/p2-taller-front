@@ -1,0 +1,3 @@
+.veh-row { display:flex; justify-content:space-between; padding:0.5rem 0; }
+
+.muted { color: var(--muted); }

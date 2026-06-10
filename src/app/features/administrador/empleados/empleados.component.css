@@ -1,0 +1,54 @@
+.page-block {
+  padding: 1rem;
+}
+
+.head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.inner {
+  padding: 1rem;
+  margin: 1rem 0;
+}
+
+.roles-box {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  margin-top: 1rem;
+  padding: 0.8rem;
+}
+
+.role-item {
+  margin-right: 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.actions {
+  margin-top: 1rem;
+  display: flex;
+  gap: 0.6rem;
+}
+
+.full-width {
+  grid-column: 1 / -1;
+}
+
+.badge {
+  margin-right: 0.25rem;
+}
+
+small.error {
+  display: block;
+  color: red;
+  font-size: 0.85rem;
+  margin-top: 0.25rem;
+}
+

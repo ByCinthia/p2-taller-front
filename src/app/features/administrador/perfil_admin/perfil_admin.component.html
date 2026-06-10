@@ -1,0 +1,44 @@
+<section class="panel-wrap">
+  <header class="hero card">
+    <div>
+      <p class="eyebrow">Panel del Administrador</p>
+      <h2>{{ auth.currentUser?.nombre_completo || 'Mi panel' }}</h2>
+      <p class="muted">
+        Revisa tu información personal.
+      </p>
+    </div>
+  </header>
+
+  <!-- SECCIÓN: MI INFORMACIÓN -->
+  <div class="grid">
+    <article class="card block">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">Perfil</p>
+          <h3>Mi información</h3>
+        </div>
+        <span class="badge badge--ok">Administrador</span>
+      </div>
+
+      <div class="profile-grid">
+        <div>
+          <span class="label">Usuario</span>
+          <strong>{{ auth.currentUser?.username }}</strong>
+        </div>
+        <div>
+          <span class="label">Correo</span>
+          <strong>{{ auth.currentUser?.email || 'N/A' }}</strong>
+        </div>
+        <div>
+          <span class="label">Nombre completo</span>
+          <strong>{{ auth.currentUser?.nombre_completo || 'N/A' }}</strong>
+        </div>
+        <div>
+          <span class="label">Empresa</span>
+          <strong>{{ auth.currentUser?.empresa_nombre || 'N/A' }}</strong>
+        </div>
+      </div>
+    </article>
+  </div>
+</section>
+

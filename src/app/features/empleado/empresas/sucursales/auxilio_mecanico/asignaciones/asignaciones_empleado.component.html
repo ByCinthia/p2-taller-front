@@ -1,0 +1,264 @@
+<div class="page">
+  <header class="hero card">
+    <div>
+      <p class="eyebrow">Empleado</p>
+      <h2>Mis asignaciones</h2>
+      <p class="lead">La lista se separa entre solicitudes activas y solicitudes ya atendidas.</p>
+    </div>
+
+    <button class="btn btn-ghost" type="button" (click)="cargarAsignaciones()" [disabled]="loading">
+      {{ loading ? 'Cargando...' : 'Actualizar' }}
+    </button>
+  </header>
+
+  <section class="grid">
+    <article class="panel card">
+      <div class="panel-head">
+        <div>
+          <h3>Solicitudes asignadas</h3>
+          <p class="muted">Pendientes o en proceso</p>
+        </div>
+        <span class="count">{{ solicitudesAsignadas.length }}</span>
+      </div>
+
+      <div *ngIf="loading" class="empty-state">Cargando solicitudes...</div>
+      <div *ngIf="!loading && solicitudesAsignadas.length === 0" class="empty-state">
+        No tienes solicitudes activas.
+      </div>
+
+      <div *ngIf="!loading && solicitudesAsignadas.length > 0" class="list">
+        <article class="request-card" *ngFor="let solicitud of solicitudesAsignadas">
+          <div class="request-top">
+            <div>
+              <h4>{{ solicitud.incidente_tipo || 'Solicitud' }}</h4>
+              <p>{{ solicitud.incidente_descripcion || 'Sin descripción' }}</p>
+            </div>
+            <span class="state state-active">{{ etiquetaEstado(solicitud) }}</span>
+          </div>
+
+          <div class="meta-grid">
+            <div>
+              <span class="label">Servicio</span>
+              <strong>{{ solicitud.servicio_nombre || 'Sin servicio' }}</strong>
+            </div>
+            <div>
+              <span class="label">Fecha</span>
+              <strong>{{ solicitud.fecha_asignacion | date:'short' }}</strong>
+            </div>
+            <div>
+              <span class="label">Ubicación</span>
+              <strong>{{ coordText(solicitud.incidente_latitud, solicitud.incidente_longitud) }}</strong>
+            </div>
+            <div>
+              <span class="label">Estado</span>
+              <strong>{{ solicitud.incidente_estado || solicitud.estado_tarea }}</strong>
+            </div>
+          </div>
+
+          <!-- Si está "asignada", mostrar solo "Comenzar tarea" -->
+          <div class="actions" *ngIf="normalizarEstado(solicitud.incidente_estado || solicitud.estado_tarea) === 'asignada'">
+            <button class="btn btn-primary" type="button" (click)="iniciarTarea(solicitud)">Comenzar tarea</button>
+          </div>
+
+          <!-- Si está "en_proceso", mostrar "Ver detalle" y "Marcar atendida" -->
+          <div class="actions" *ngIf="normalizarEstado(solicitud.incidente_estado || solicitud.estado_tarea) === 'en_proceso'">
+            <button class="btn btn-secondary" type="button" (click)="abrirDetalle(solicitud, 'detalle')">Ver detalle</button>
+            <button class="btn btn-success" type="button" (click)="marcarAtendida(solicitud)">Marcar atendida</button>
+          </div>
+        </article>
+      </div>
+    </article>
+
+    <article class="panel card attended-panel">
+      <div class="panel-head">
+        <div>
+          <h3>Solicitudes ya atendidas</h3>
+          <p class="muted">Cerradas, finalizadas o atendidas</p>
+        </div>
+        <span class="count count-soft">{{ solicitudesAtendidas.length }}</span>
+      </div>
+
+      <div *ngIf="loading" class="empty-state">Cargando solicitudes...</div>
+      <div *ngIf="!loading && solicitudesAtendidas.length === 0" class="empty-state">
+        No hay solicitudes atendidas todavía.
+      </div>
+
+      <div *ngIf="!loading && solicitudesAtendidas.length > 0" class="list">
+        <article class="request-card request-card-done" *ngFor="let solicitud of solicitudesAtendidas">
+          <div class="request-top">
+            <div>
+              <h4>{{ solicitud.incidente_tipo || 'Solicitud' }}</h4>
+              <p>{{ solicitud.incidente_descripcion || 'Sin descripción' }}</p>
+            </div>
+            <span class="state state-done">{{ etiquetaEstado(solicitud) }}</span>
+          </div>
+
+          <div class="meta-grid">
+            <div>
+              <span class="label">Servicio</span>
+              <strong>{{ solicitud.servicio_nombre || 'Sin servicio' }}</strong>
+            </div>
+            <div>
+              <span class="label">Fecha</span>
+              <strong>{{ solicitud.fecha_asignacion | date:'short' }}</strong>
+            </div>
+            <div>
+              <span class="label">Ubicación</span>
+              <strong>{{ coordText(solicitud.incidente_latitud, solicitud.incidente_longitud) }}</strong>
+            </div>
+            <div>
+              <span class="label">Estado</span>
+              <strong>{{ solicitud.incidente_estado || solicitud.estado_tarea }}</strong>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button class="btn btn-secondary" type="button" (click)="abrirDetalle(solicitud, 'detalle')">Ver detalle</button>
+          </div>
+        </article>
+      </div>
+    </article>
+  </section>
+
+  <!-- MODAL DETALLE -->
+  <div *ngIf="detalleVisible" class="modal-overlay" (click)="cerrarDetalle()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div>
+          <p class="eyebrow">{{ detalleMode === 'iniciar' ? 'Comenzar tarea' : detalleMode === 'marcarAtendida' ? 'Marcar atendida' : 'Detalle' }}</p>
+          <h3>Solicitud asignada</h3>
+        </div>
+        <button class="btn-close" type="button" (click)="cerrarDetalle()">×</button>
+      </div>
+
+      <div class="modal-body">
+        <div *ngIf="detalleLoading" class="empty-state compact">Cargando detalle...</div>
+
+        <ng-container *ngIf="!detalleLoading && detalleSolicitud">
+
+          <!-- MODO: INICIAR TAREA -->
+          <ng-container *ngIf="detalleMode === 'iniciar'">
+            <div class="detail-card">
+              <h4>{{ detalleSolicitud.tipo || 'Solicitud' }}</h4>
+              <p>{{ detalleSolicitud.descripcion || 'Sin descripción' }}</p>
+            </div>
+
+            <div class="detail-grid">
+              <div>
+                <span class="label">ID solicitud</span>
+                <strong>{{ detalleSolicitud.id }}</strong>
+              </div>
+              <div>
+                <span class="label">Estado actual</span>
+                <strong>{{ detalleSolicitud.estado }}</strong>
+              </div>
+              <div>
+                <span class="label">Vehiculo</span>
+                <strong>{{ detalleSolicitud.vehiculo_id || 'N/A' }}</strong>
+              </div>
+              <div>
+                <span class="label">Prioridad</span>
+                <strong>{{ detalleSolicitud.prioridad ?? 'N/A' }}</strong>
+              </div>
+              <div>
+                <span class="label">Ubicacion incidente</span>
+                <strong>{{ coordText(detalleSolicitud.latitud, detalleSolicitud.longitud) }}</strong>
+              </div>
+              <div>
+                <span class="label">Creada</span>
+                <strong>{{ detalleSolicitud.creado_en | date:'short' }}</strong>
+              </div>
+            </div>
+
+            <div class="actions modal-actions">
+              <button class="btn btn-primary" type="button" (click)="iniciarTareaConUbicacion()" [disabled]="savingState">
+                {{ savingState ? 'Enviando...' : 'Enviar ubicación actual' }}
+              </button>
+              <button class="btn btn-ghost" type="button" (click)="cerrarDetalle()">Cancelar</button>
+            </div>
+          </ng-container>
+
+          <!-- MODO: VER DETALLE -->
+          <ng-container *ngIf="detalleMode === 'detalle'">
+            <div class="detail-card">
+              <h4>{{ detalleSolicitud.tipo || 'Solicitud' }}</h4>
+              <p>{{ detalleSolicitud.descripcion || 'Sin descripción' }}</p>
+            </div>
+
+            <div class="detail-grid">
+              <div>
+                <span class="label">ID solicitud</span>
+                <strong>{{ detalleSolicitud.id }}</strong>
+              </div>
+              <div>
+                <span class="label">Estado actual</span>
+                <strong>{{ detalleSolicitud.estado }}</strong>
+              </div>
+              <div>
+                <span class="label">Vehiculo</span>
+                <strong>{{ detalleSolicitud.vehiculo_id || 'N/A' }}</strong>
+              </div>
+              <div>
+                <span class="label">Prioridad</span>
+                <strong>{{ detalleSolicitud.prioridad ?? 'N/A' }}</strong>
+              </div>
+              <div>
+                <span class="label">Ubicacion incidente</span>
+                <strong>{{ coordText(detalleSolicitud.latitud, detalleSolicitud.longitud) }}</strong>
+              </div>
+              <div>
+                <span class="label">Creada</span>
+                <strong>{{ detalleSolicitud.creado_en | date:'short' }}</strong>
+              </div>
+            </div>
+
+            <div class="actions modal-actions">
+              <button class="btn btn-primary" type="button" (click)="verSeguimiento()">Ver seguimiento</button>
+              <button class="btn btn-ghost" type="button" (click)="cerrarDetalle()">Cerrar</button>
+            </div>
+          </ng-container>
+
+          <!-- MODO: MARCAR ATENDIDA -->
+          <ng-container *ngIf="detalleMode === 'marcarAtendida'">
+            <div class="detail-card">
+              <h4>{{ detalleSolicitud.tipo || 'Solicitud' }}</h4>
+              <p>{{ detalleSolicitud.descripcion || 'Sin descripción' }}</p>
+            </div>
+
+            <div class="detail-grid">
+              <div>
+                <span class="label">ID solicitud</span>
+                <strong>{{ detalleSolicitud.id }}</strong>
+              </div>
+              <div>
+                <span class="label">Estado actual</span>
+                <strong>{{ detalleSolicitud.estado }}</strong>
+              </div>
+              <div>
+                <span class="label">Ubicacion incidente</span>
+                <strong>{{ coordText(detalleSolicitud.latitud, detalleSolicitud.longitud) }}</strong>
+              </div>
+            </div>
+
+            <div style="padding: 1rem; background: rgba(34, 197, 94, 0.1); border-radius: 10px; margin: 1rem 0;">
+              <p style="margin: 0; color: #86efac; font-size: 0.95rem;">¿Deseas marcar esta solicitud como atendida?</p>
+            </div>
+
+            <div class="actions modal-actions">
+              <button class="btn btn-success" type="button" (click)="confirmarMarcarAtendida()" [disabled]="savingState">
+                {{ savingState ? 'Marcando...' : 'Sí, marcar atendida' }}
+              </button>
+              <button class="btn btn-ghost" type="button" (click)="cerrarDetalle()">Cancelar</button>
+            </div>
+          </ng-container>
+
+        </ng-container>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="message" class="alert" [class.success]="messageType === 'success'" [class.error]="messageType === 'error'">
+    {{ message }}
+  </div>
+</div>
+

@@ -1,0 +1,135 @@
+.page-block {
+  padding: 1rem;
+}
+
+.head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.error {
+  color: #ef4444;
+  margin-bottom: 1rem;
+}
+
+.incidents-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.incident-card {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 1rem;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.incident-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.incident-header h4 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.incident-header p {
+  margin: 0.25rem 0 0 0;
+  font-size: 0.9rem;
+}
+
+.badge {
+  padding: 0.4rem 0.8rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.badge--pending {
+  background: #fbbf24;
+  color: #000;
+}
+
+.badge--processing {
+  background: #60a5fa;
+  color: #fff;
+}
+
+.badge--completed {
+  background: #34d399;
+  color: #000;
+}
+
+.incident-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 8px;
+  font-size: 0.9rem;
+}
+
+.incident-details div {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.label {
+  font-weight: 500;
+  min-width: 80px;
+}
+
+.incident-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.btn {
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.btn-primary {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: rgba(59, 130, 246, 0.9);
+}
+
+.btn-ghost {
+  background: transparent;
+  border-color: transparent;
+}
+
+.btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+

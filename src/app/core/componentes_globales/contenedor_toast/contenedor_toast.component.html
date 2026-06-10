@@ -1,0 +1,31 @@
+<div class="toast-container">
+  <div
+    *ngFor="let toast of toasts"
+    [class]="'toast toast-' + toast.type"
+    [@slideIn]
+  >
+    <div class="toast-content">
+      <div class="toast-header">
+        <strong>{{ toast.title }}</strong>
+        <button
+          type="button"
+          class="toast-close"
+          (click)="onClose(toast.id)"
+        >
+          ✕
+        </button>
+      </div>
+      <p class="toast-message">{{ toast.message }}</p>
+      <div class="toast-actions" *ngIf="toast.action">
+        <button
+          type="button"
+          class="toast-action-btn"
+          (click)="onActionClick(toast)"
+        >
+          {{ toast.action.label }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+

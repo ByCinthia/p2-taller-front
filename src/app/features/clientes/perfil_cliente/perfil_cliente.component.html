@@ -1,0 +1,283 @@
+<section class="card page-block">
+  <header class="head">
+    <div>
+      <h2>Portal de cliente</h2>
+      <p class="muted">Perfil y gestión de vehículos.</p>
+    </div>
+    <a routerLink="/app/incidentes" class="btn btn-ghost">Ir a Solicitud de Auxilio</a>
+  </header>
+
+  <nav class="menu-tabs">
+    <button class="tab" [class.active]="activeSection === 'perfil'" (click)="setSection('perfil')">Perfil</button>
+    <button class="tab" [class.active]="activeSection === 'vehiculos'" (click)="setSection('vehiculos')">Mis vehículos</button>
+    <button class="tab" [class.active]="activeSection === 'solicitud'" (click)="setSection('solicitud')">Solicitud de Auxilio</button>
+  </nav>
+
+  <p class="error" *ngIf="errorMsg">{{ errorMsg }}</p>
+
+  <section class="card inner" *ngIf="activeSection === 'perfil' && cliente as c">
+    <div class="profile-summary">
+      <div>
+        <h3>{{ c.nombre || 'Perfil de cliente' }}</h3>
+        <p class="muted">{{ auth.currentUser?.username || c.username || 'Usuario' }}</p>
+      </div>
+      <button class="btn btn-primary" type="button" (click)="editingProfile = !editingProfile">
+        {{ editingProfile ? 'Cancelar edición' : 'Editar perfil' }}
+      </button>
+    </div>
+
+    <div *ngIf="!editingProfile" class="profile-grid">
+      <div><span class="label-inline">Nombre</span><strong>{{ c.nombre || 'N/A' }}</strong></div>
+      <div><span class="label-inline">Usuario</span><strong>{{ auth.currentUser?.username || c.username || 'N/A' }}</strong></div>
+      <div><span class="label-inline">Correo</span><strong>{{ c.email || auth.currentUser?.email || 'N/A' }}</strong></div>
+      <div><span class="label-inline">Teléfono</span><strong>{{ c.telefono || 'N/A' }}</strong></div>
+    </div>
+
+    <form *ngIf="editingProfile" class="form-grid edit-grid" (ngSubmit)="saveProfile()">
+      <div>
+        <label class="label">Nombre</label>
+        <input class="input" [(ngModel)]="profileForm.nombre" name="nombre" />
+      </div>
+      <div>
+        <label class="label">Usuario</label>
+        <input class="input" [(ngModel)]="profileForm.username" name="username" />
+      </div>
+      <div>
+        <label class="label">Correo</label>
+        <input class="input" [(ngModel)]="profileForm.email" name="email" />
+      </div>
+      <div>
+        <label class="label">Teléfono</label>
+        <input class="input" [(ngModel)]="profileForm.telefono" name="telefono" />
+      </div>
+      <div class="actions full-width">
+        <button class="btn btn-primary" type="submit" [disabled]="savingProfile">Guardar cambios</button>
+      </div>
+    </form>
+  </section>
+
+  <section class="card inner" *ngIf="activeSection === 'vehiculos'">
+    <div class="section-head">
+      <div>
+        <h3>Mis vehículos</h3>
+        <p class="muted">Lista, detalle y registro nuevo.</p>
+      </div>
+      <button class="btn btn-primary" type="button" (click)="showVehicleForm = !showVehicleForm">
+        {{ showVehicleForm ? 'Cerrar registro' : 'Registrar nuevo vehículo' }}
+      </button>
+    </div>
+
+    <div *ngIf="showVehicleForm" class="card nested">
+      <h4>Registrar nuevo vehículo</h4>
+      <div class="form-grid">
+        <input class="input" [(ngModel)]="newVehiculo.marca" placeholder="Marca" name="newMarca" />
+        <input class="input" [(ngModel)]="newVehiculo.modelo" placeholder="Modelo" name="newModelo" />
+        <input class="input" [(ngModel)]="newVehiculo.placa" placeholder="Placa" name="newPlaca" />
+        <input class="input" type="number" [(ngModel)]="newVehiculo.anio" placeholder="Año" name="newAnio" />
+      </div>
+      <div class="actions">
+        <button class="btn btn-primary" type="button" (click)="createVehiculo()" [disabled]="loadingVehiculos">Guardar vehículo</button>
+      </div>
+    </div>
+
+    <p class="muted" *ngIf="loadingVehiculos">Cargando vehículos...</p>
+    <div *ngIf="!loadingVehiculos && vehiculos.length === 0" class="muted">No tienes vehículos registrados.</div>
+
+    <div class="vehicle-list" *ngIf="vehiculos.length > 0">
+      <article class="vehicle-card" *ngFor="let v of vehiculos">
+        <div>
+          <h4>{{ v.marca || 'N/A' }} {{ v.modelo || '' }}</h4>
+          <p class="muted">Placa {{ v.placa || 'N/A' }}</p>
+        </div>
+        <div class="vehicle-actions">
+          <button class="btn btn-ghost" type="button" (click)="selectVehicle(v)">Ver detalle</button>
+          <button class="btn btn-ghost" type="button" (click)="setPrincipal(v)">{{ v.principal ? 'Principal' : 'Hacer principal' }}</button>
+          <button class="btn btn-danger" type="button" (click)="removeVehiculo(v)">Eliminar</button>
+        </div>
+      </article>
+    </div>
+
+    <section class="card nested" *ngIf="selectedVehicle as v">
+      <h4>Detalle del vehículo</h4>
+      <div class="detail-grid">
+        <div><span class="label-inline">Marca</span><strong>{{ v.marca || 'N/A' }}</strong></div>
+        <div><span class="label-inline">Modelo</span><strong>{{ v.modelo || 'N/A' }}</strong></div>
+        <div><span class="label-inline">Placa</span><strong>{{ v.placa || 'N/A' }}</strong></div>
+        <div><span class="label-inline">Año</span><strong>{{ v.anio || 'N/A' }}</strong></div>
+        <div><span class="label-inline">Principal</span><strong>{{ v.principal ? 'Sí' : 'No' }}</strong></div>
+      </div>
+    </section>
+  </section>
+
+  <!-- Sección: Notificaciones -->
+  <section class="card inner" *ngIf="activeSection === 'notificaciones'">
+    <div class="section-head">
+      <div>
+        <h3>Mis Notificaciones</h3>
+        <p class="muted">Avisos y actualizaciones de tus solicitudes.</p>
+      </div>
+      <button class="btn btn-ghost" type="button" (click)="loadNotifications()" [disabled]="loadingNotifications">
+        {{ loadingNotifications ? 'Cargando...' : 'Actualizar' }}
+      </button>
+    </div>
+
+    <p class="muted" *ngIf="loadingNotifications">Cargando notificaciones...</p>
+    <div *ngIf="!loadingNotifications && notifications.length === 0" class="muted">No tienes notificaciones.</div>
+
+    <div class="notifications-list" *ngIf="!loadingNotifications && notifications.length > 0">
+      <article class="notification-card" 
+        *ngFor="let notif of notifications" 
+        (click)="showNotificationDetail(notif)"
+        [class.unread]="!notif.leida">
+        <div class="notification-header">
+          <strong class="notification-title">{{ notif.titulo }}</strong>
+          <span class="notification-date">{{ notif.creada_en | date:'dd/MM HH:mm' }}</span>
+        </div>
+        <div class="notification-body">{{ notif.mensaje }}</div>
+        <div *ngIf="!notif.leida" class="badge badge--new">Nuevo</div>
+      </article>
+    </div>
+  </section>
+
+  <!-- Modal de Detalle de Notificación -->
+  <div *ngIf="selectedNotification" class="modal-overlay" (click)="closeNotificationDetail()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Detalle de notificación</h3>
+        <button class="btn-close" (click)="closeNotificationDetail()">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="detail-section">
+          <span class="label">Título</span>
+          <p>{{ selectedNotification.titulo }}</p>
+        </div>
+
+        <div class="detail-section">
+          <span class="label">Mensaje</span>
+          <p>{{ selectedNotification.mensaje }}</p>
+        </div>
+
+        <div class="detail-section">
+          <span class="label">Fecha</span>
+          <p>{{ selectedNotification.creada_en | date: 'dd/MM/yyyy HH:mm:ss' }}</p>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn" (click)="closeNotificationDetail()">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sección: Seguimiento de Solicitudes -->
+  <section class="card inner" *ngIf="activeSection === 'seguimiento'">
+    <div class="section-head">
+      <div>
+        <h3>Seguimiento de Solicitudes</h3>
+        <p class="muted">Estado y detalle de tus solicitudes de auxilio.</p>
+      </div>
+      <button class="btn btn-ghost" type="button" (click)="cargarSolicitudes()" [disabled]="loadingSolicitudes">
+        {{ loadingSolicitudes ? 'Cargando...' : 'Actualizar' }}
+      </button>
+    </div>
+
+    <p class="muted" *ngIf="loadingSolicitudes">Cargando solicitudes...</p>
+    <div *ngIf="!loadingSolicitudes && misSolicitudes.length === 0" class="muted">No tienes solicitudes registradas.</div>
+
+    <div class="solicitudes-list" *ngIf="!loadingSolicitudes && misSolicitudes.length > 0">
+      <article class="solicitud-card" *ngFor="let solicitud of misSolicitudes">
+        <div class="solicitud-header">
+          <div class="solicitud-info">
+            <h4>{{ solicitud.tipo || 'Solicitud' }}</h4>
+            <p class="muted">ID: {{ solicitud.id }}</p>
+            <p class="muted">Fecha: {{ solicitud.creado_en | date:'short' }}</p>
+          </div>
+          <div class="estado-badge" [ngClass]="'estado-' + (solicitud.estado || 'pendiente')">
+            {{ solicitud.estado || 'pendiente' }}
+          </div>
+        </div>
+
+        <div class="solicitud-detail">
+          <p class="descripcion"><strong>Descripción:</strong> {{ solicitud.descripcion || 'Sin descripción' }}</p>
+          
+          <div class="info-grid">
+            <div>
+              <span class="label-inline">Vehículo</span>
+              <strong>{{ solicitud.vehiculo_id || 'N/A' }}</strong>
+            </div>
+            <div>
+              <span class="label-inline">Prioridad</span>
+              <strong>P{{ solicitud.prioridad || '-' }}</strong>
+            </div>
+            <div>
+              <span class="label-inline">Ubicación</span>
+              <strong class="coords">
+                {{ solicitud.latitud?.toFixed(4) || '-' }}, 
+                {{ solicitud.longitud?.toFixed(4) || '-' }}
+              </strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="solicitud-actions">
+          <button class="btn btn-secondary" type="button" (click)="abrirMapa(solicitud)">
+            📍 Ver en mapa
+          </button>
+          <button class="btn btn-ghost" type="button" (click)="verDetalleTracking(solicitud)">
+            📊 Seguimiento en vivo
+          </button>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="card inner" *ngIf="activeSection === 'solicitud'">
+    <div class="section-head">
+      <div>
+        <h3>Solicitud de Auxilio</h3>
+        <p class="muted">Marca la ubicación en el mapa o usa tu ubicación actual.</p>
+      </div>
+    </div>
+
+    <div class="map-area">
+      <div class="map-embed">
+        <iframe
+          width="100%"
+          height="320"
+          [src]="mapUrl"
+          style="border:0;"
+          loading="lazy"
+        ></iframe>
+      </div>
+
+      <div class="form-grid" style="margin-top:1rem">
+        <select class="input" [(ngModel)]="createForm.tipo" name="tipo">
+          <option value="">Selecciona tipo</option>
+          <option value="averia">Avería</option>
+          <option value="accidente">Accidente</option>
+          <option value="otro">Otro</option>
+        </select>
+
+        <textarea class="input" [(ngModel)]="createForm.descripcion" name="descripcion" placeholder="Descripción del problema"></textarea>
+
+        <div>
+          <label class="label">Latitud</label>
+          <input class="input" [(ngModel)]="createForm.latitud" name="lat" />
+        </div>
+
+        <div>
+          <label class="label">Longitud</label>
+          <input class="input" [(ngModel)]="createForm.longitud" name="lon" />
+        </div>
+
+        <div style="display:flex;gap:0.5rem;align-items:center">
+          <button class="btn btn-ghost" type="button" (click)="useMyLocation()">Usar mi ubicación</button>
+          <button class="btn btn-primary" type="button" (click)="submitSolicitud()" [disabled]="submitting">{{ submitting ? 'Enviando...' : 'Solicitar Auxilio' }}</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</section>
+

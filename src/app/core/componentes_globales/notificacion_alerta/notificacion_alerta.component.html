@@ -1,0 +1,62 @@
+<div class="alert-overlay" *ngIf="incidente">
+  <div class="alert-card glass">
+    <!-- Temporizador regresivo visual -->
+    <div class="timer-bar" [style.width.%]="progressPercent"></div>
+
+    <div class="alert-header">
+      <div class="header-main">
+        <span class="warning-icon">🚨</span>
+        <div class="header-titles">
+          <h3>Nueva Solicitud de Auxilio</h3>
+          <span class="service-type-badge">{{ incidente.tipo }}</span>
+        </div>
+      </div>
+      <div class="timer-badge">{{ timeLeft }}s</div>
+    </div>
+
+    <div class="alert-body">
+      <div class="description-section">
+        <p class="description-text">{{ incidente.descripcion || 'Sin descripción' }}</p>
+      </div>
+
+      <!-- Carrusel de Evidencias Multimedia -->
+      <div class="multimedia-section" *ngIf="incidente.evidencias && incidente.evidencias.length > 0">
+        <div class="carousel-container">
+          <button class="carousel-control prev" (click)="prevSlide()" *ngIf="incidente.evidencias.length > 1">‹</button>
+          
+          <div class="carousel-slides">
+            <div class="carousel-slide" *ngFor="let ev of incidente.evidencias; let i = index" [class.active]="i === currentSlide">
+              <!-- Evidencia Tipo FOTO -->
+              <img [src]="ev.url_archivo" *ngIf="ev.tipo === 'foto'" class="media-element" alt="Evidencia fotográfica" />
+              
+              <!-- Evidencia Tipo AUDIO -->
+              <div class="audio-container" *ngIf="ev.tipo === 'audio'">
+                <span class="audio-icon">🎵 Evidencia de Audio</span>
+                <audio [src]="ev.url_archivo" controls class="audio-element"></audio>
+              </div>
+
+              <!-- Evidencia de Texto o Nota -->
+              <div class="text-evidence-container" *ngIf="ev.tipo === 'texto' || ev.texto">
+                <span class="text-icon">📝 Detalle</span>
+                <p class="text-evidence-content">{{ ev.texto }}</p>
+              </div>
+            </div>
+          </div>
+
+          <button class="carousel-control next" (click)="nextSlide()" *ngIf="incidente.evidencias.length > 1">›</button>
+        </div>
+        <!-- Indicadores del carrusel -->
+        <div class="carousel-indicators" *ngIf="incidente.evidencias.length > 1">
+          <span class="indicator-dot" *ngFor="let ev of incidente.evidencias; let i = index" [class.active]="i === currentSlide" (click)="currentSlide = i"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="alert-footer">
+      <button class="btn btn-danger-glow" (click)="closeAlert()">Ignorar</button>
+      <button class="btn btn-success-glow" (click)="aceptarSolicitud()" [disabled]="accepting">
+        {{ accepting ? 'Aceptando...' : 'Aceptar Solicitud' }}
+      </button>
+    </div>
+  </div>
+</div>
