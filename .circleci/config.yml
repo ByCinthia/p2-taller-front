@@ -1,41 +1,62 @@
-# This config was automatically generated from your source code
-# Stacks detected: deps:node:.
+# Pipeline CI/CD para frontend Angular
+# Build → Deploy a AWS EC2
 version: 2.1
 orbs:
   node: circleci/node@5
 jobs:
-  build-node:
-    # Build node project
+  build:
+    # Build del proyecto Angular
     executor: node/default
     steps:
       - checkout
       - node/install-packages:
           pkg-manager: npm
       - run:
+          name: Build de producción
           command: npm run build
-      - run:
-          name: Create the ~/artifacts directory if it doesn't exist
-          command: mkdir -p ~/artifacts
-      # Copy output to artifacts dir
-      - run:
-          name: Copy artifacts
-          command: cp -R build dist public .output .next .docusaurus ~/artifacts 2>/dev/null || true
+      # Persistir el output del build para el job de deploy
+      - persist_to_workspace:
+          root: dist
+          paths:
+            - frontend
+      # Guardar artifacts por si se necesita inspeccionar
       - store_artifacts:
-          path: ~/artifacts
-          destination: node-build
+          path: dist/frontend
+          destination: frontend-build
+
   deploy:
-    # This is an example deploy job, not actually used by the workflow
+    # Despliegue a AWS EC2
     docker:
       - image: cimg/base:stable
     steps:
-      # Replace this with steps to deploy to users
+      - checkout
+      - attach_workspace:
+          at: dist
+      - add_ssh_keys:
+          fingerprints:
+            - "SHA256:up+RAgJy8I7UOdzlO17YgnCc9QS79jffVvRHLm3UIno"
       - run:
-          name: deploy
-          command: '#e.g. ./deploy.sh'
+          name: Copiar archivos a EC2
+          command: |
+            echo "Desplegando a ${EC2_USER}@${EC2_IP}..."
+            rsync -avz --delete \
+              -e "ssh -o StrictHostKeyChecking=no" \
+              dist/frontend/ \
+              ${EC2_USER}@${EC2_IP}:~/frontend/
+      - run:
+          name: Recargar servidor web en EC2
+          command: |
+            ssh -o StrictHostKeyChecking=no \
+              ${EC2_USER}@${EC2_IP} \
+              "sudo systemctl reload nginx 2>/dev/null || sudo systemctl restart nginx 2>/dev/null || echo 'nginx no detectado, reinicia manualmente si es necesario'"
+
 workflows:
-  build:
+  build-and-deploy:
     jobs:
-      - build-node
-    # - deploy:
-    #     requires:
-    #       - build-node
+      - build
+      - deploy:
+          requires:
+            - build
+          filters:
+            branches:
+              only: main
