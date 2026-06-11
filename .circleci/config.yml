@@ -39,10 +39,15 @@ jobs:
           name: Copiar archivos a EC2
           command: |
             echo "Desplegando a ${EC2_USER}@${EC2_IP}..."
-            rsync -avz --delete \
-              -e "ssh -o StrictHostKeyChecking=no" \
-              dist/frontend/ \
-              ${EC2_USER}@${EC2_IP}:~/frontend/
+            # Crear directorio remoto si no existe y limpiar archivos viejos
+            ssh -o StrictHostKeyChecking=no \
+              ${EC2_USER}@${EC2_IP} \
+              "mkdir -p ~/frontend && rm -rf ~/frontend/*"
+            # Copiar archivos vía tar sobre SSH (no requiere rsync en el remoto)
+            tar -C dist/frontend -cf - . | \
+              ssh -o StrictHostKeyChecking=no \
+                ${EC2_USER}@${EC2_IP} \
+                "tar -C ~/frontend -xf -"
       - run:
           name: Recargar servidor web en EC2
           command: |
