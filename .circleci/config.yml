@@ -44,7 +44,7 @@ jobs:
               ${EC2_USER}@${EC2_IP} \
               "mkdir -p ~/frontend && rm -rf ~/frontend/*"
             # Copiar archivos vía tar sobre SSH (no requiere rsync en el remoto)
-            tar -C dist/frontend -cf - . | \
+            tar -C dist/frontend/browser -cf - . | \
               ssh -o StrictHostKeyChecking=no \
                 ${EC2_USER}@${EC2_IP} \
                 "tar -C ~/frontend -xf -"
