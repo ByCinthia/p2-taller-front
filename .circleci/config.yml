@@ -42,12 +42,12 @@ jobs:
             # Crear directorio remoto si no existe y limpiar archivos viejos
             ssh -o StrictHostKeyChecking=no \
               ${EC2_USER}@${EC2_IP} \
-              "mkdir -p ~/frontend && rm -rf ~/frontend/*"
+              "sudo mkdir -p /var/www/frontend && sudo rm -rf /var/www/frontend/* && sudo chown ${EC2_USER}:nginx /var/www/frontend"
             # Copiar archivos vía tar sobre SSH (no requiere rsync en el remoto)
             tar -C dist/frontend/browser -cf - . | \
               ssh -o StrictHostKeyChecking=no \
                 ${EC2_USER}@${EC2_IP} \
-                "tar -C ~/frontend -xf -"
+                "sudo tar -C /var/www/frontend -xf - && sudo chown -R nginx:nginx /var/www/frontend"
       - run:
           name: Recargar servidor web en EC2
           command: |
