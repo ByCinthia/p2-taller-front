@@ -346,3 +346,8 @@
   font-family: 'Courier New', Courier, monospace;
   font-size: 0.78rem;
 }
+
+::ng-deep .custom-pin-marker {
+  background: none !important;
+  border: none !important;
+}
