@@ -56,12 +56,13 @@ export class ReportesApiService {
    * Genera reporte a partir de audio.
    */
   generarReporteAudio(
-    archivo: File,
+    audioBlob: Blob,
+    fileName: string,
     formato: 'texto' | 'pdf' = 'texto',
     empresa_id?: string
   ): Observable<ReporteGenerado | Blob> {
     const formData = new FormData();
-    formData.append('archivo', archivo);
+    formData.append('archivo', audioBlob, fileName);
     formData.append('formato', formato);
     if (empresa_id) formData.append('empresa_id', empresa_id);
 

@@ -64,41 +64,65 @@
           </button>
         </div>
 
-        <!-- Modo texto -->
+        <!-- Modo audio: voz a texto -->
+        <div *ngIf="modoAudio">
+          <label class="field-label">Voz a texto</label>
+
+          <div class="voice-input">
+            <!-- Estado: inactivo -->
+            <div *ngIf="!grabando" class="voice-ready">
+              <div class="mic-icon-wrap">
+                <i class="bi bi-mic"></i>
+              </div>
+              <p class="voice-hint">Presiona el bot&oacute;n y habla para describir el reporte</p>
+              <button class="btn btn-primary btn-recorder" (click)="iniciarTranscripcion()" [disabled]="!speechSupported">
+                <i class="bi bi-record-circle"></i> Iniciar voz
+              </button>
+              <p *ngIf="!speechSupported" class="text-danger" style="font-size:0.82rem;">
+                <i class="bi bi-exclamation-triangle-fill"></i> Reconocimiento de voz no soportado. Usa Chrome o Edge.
+              </p>
+            </div>
+
+            <!-- Estado: grabando -->
+            <div *ngIf="grabando" class="voice-recording">
+              <div class="recording-indicator">
+                <span class="recording-dot"></span>
+                <span class="recording-text">Escuchando...</span>
+              </div>
+              <div class="recording-wave">
+                <span *ngFor="let _ of [].constructor(5)" class="wave-bar"></span>
+              </div>
+              <button class="btn btn-danger btn-recorder" (click)="detenerTranscripcion()">
+                <i class="bi bi-stop-fill"></i> Detener
+              </button>
+            </div>
+
+            <!-- Estado: procesando audio -->
+            <div *ngIf="procesandoAudio" class="voice-processing">
+              <div class="processing-indicator">
+                <i class="bi bi-arrow-clockwise spin"></i>
+                <span>Procesando audio...</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Prompt (solo visible en modo texto) -->
         <div *ngIf="!modoAudio">
           <label class="field-label" for="prompt">Prompt / Instrucci&oacute;n</label>
           <textarea
             id="prompt"
             class="form-input prompt-input"
             [(ngModel)]="prompt"
-            placeholder='Ej: "Genera un resumen de incidentes del &uacute;ltimo mes"'
+            placeholder="Ej: Genera un resumen de incidentes del &uacute;ltimo mes"
             rows="4"
           ></textarea>
           <p class="field-hint">Describe en lenguaje natural qu&eacute; reporte necesitas. La IA usar&aacute; los datos del dashboard como contexto.</p>
         </div>
 
         <!-- Modo audio -->
-        <div *ngIf="modoAudio">
-          <label class="field-label">Archivo de audio</label>
-          <div class="file-drop-zone">
-            <input
-              type="file"
-              accept="audio/*"
-              (change)="onFileSelected($event)"
-              id="audioFile"
-              class="file-input-hidden"
-            />
-            <label for="audioFile" class="file-label">
-              <i class="bi bi-cloud-upload" style="font-size: 2rem;"></i>
-              <span *ngIf="!archivoAudio">Selecciona un archivo de audio (mp3, wav, m4a)</span>
-              <span *ngIf="archivoAudio"><i class="bi bi-file-earmark-music"></i> {{ archivoAudio.name }}</span>
-            </label>
-          </div>
-          <p class="field-hint">La IA transcribir&aacute; el audio con Whisper y generar&aacute; el reporte.</p>
-        </div>
-
-        <!-- Formato -->
-        <div class="form-row">
+        <!-- Formato (solo visible en modo texto) -->
+        <div class="form-row" *ngIf="!modoAudio">
           <label class="field-label">Formato de salida</label>
           <div class="formato-options">
             <label class="radio-card" [class.active]="formato === 'texto'">
@@ -119,8 +143,8 @@
           <i class="bi bi-exclamation-triangle-fill"></i> {{ errorMsg }}
         </div>
 
-        <!-- Botón generar -->
-        <button class="btn btn-primary btn-generar" (click)="generar()" [disabled]="loading">
+        <!-- Botón generar (solo texto) -->
+        <button *ngIf="!modoAudio" class="btn btn-primary btn-generar" (click)="generar()" [disabled]="loading">
           <i class="bi" [class.bi-stars]="!loading" [class.bi-arrow-clockwise]="loading" [class.spin]="loading"></i>
           {{ loading ? 'Generando reporte...' : 'Generar Reporte con IA' }}
         </button>
