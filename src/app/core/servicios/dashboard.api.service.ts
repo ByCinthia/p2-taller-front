@@ -85,7 +85,7 @@ export class DashboardApiService {
    * Carga todo en una sola llamada.
    */
   getDashboard(filtros?: DashboardFiltros): Observable<DashboardCompleto> {
-    return this.http.get<DashboardCompleto>(this.base, { params: this.buildParams(filtros) });
+    return this.http.get<DashboardCompleto>(`${this.base}/`, { params: this.buildParams(filtros) });
   }
 
   /**
