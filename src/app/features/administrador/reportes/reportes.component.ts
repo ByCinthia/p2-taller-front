@@ -1,16 +1,16 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import {
-  DashboardApiService,
-  DashboardCompleto,
-  DashboardFiltros,
-  ResumenDashboard,
-  IncidentePorEstado,
-  PuntoSerieTemporal,
-  MapaIncidenteOut,
-  RendimientoTallerOut,
-} from '../../../core/servicios/dashboard.api.service';
+import { ReportesApiService, ReporteGenerado, EstadoIA } from '../../../core/servicios/reportes.api.service';
+
+interface HistorialEntry {
+  id: number;
+  prompt: string;
+  formato: string;
+  reporte: string;
+  fecha: string;
+  modelo: string;
+}
 
 @Component({
   selector: 'app-reportes',
@@ -20,78 +20,163 @@ import {
   styleUrls: ['./reportes.component.css'],
 })
 export class ReportesComponent implements OnInit {
-  // Datos del dashboard completo
-  resumen: ResumenDashboard | null = null;
-  porEstado: IncidentePorEstado[] = [];
-  serieTemporal: PuntoSerieTemporal[] = [];
-  tiposIncidentes: { tipo: string; cantidad: number }[] = [];
-  zonasMasIncidentes: { latitud: number; longitud: number; cantidad: number; tipos: string[] }[] = [];
-  talleresEficientes: RendimientoTallerOut[] = [];
-  mapaIncidentes: MapaIncidenteOut[] = [];
+  // Formulario
+  prompt = '';
+  formato: 'texto' | 'pdf' = 'texto';
+  archivoAudio: File | null = null;
+  modoAudio = false;
 
-  // Filtros
-  filtros: DashboardFiltros = { intervalo: 'day' };
-  desde = '';
-  hasta = '';
-
+  // Estado
   loading = false;
   errorMsg = '';
-  activeTab: 'resumen' | 'estados' | 'timeline' | 'talleres' | 'mapa' = 'resumen';
+  reporteGenerado: ReporteGenerado | null = null;
+  pdfBlobUrl: string | null = null;
+  pdfFileName = '';
 
-  constructor(private readonly dashboardApi: DashboardApiService) {}
+  // Estado IA
+  estadoIA: EstadoIA | null = null;
+  checkingIA = false;
+  showIAStatus = false;
 
-  ngOnInit(): void {
-    this.load();
+  // Historial local
+  historial: HistorialEntry[] = [];
+  activeTab: 'generar' | 'historial' = 'generar';
+
+  constructor(private readonly reportesApi: ReportesApiService) {
+    const saved = localStorage.getItem('reportes_historial');
+    if (saved) {
+      try { this.historial = JSON.parse(saved); } catch { this.historial = []; }
+    }
   }
 
-  load(): void {
+  ngOnInit(): void {
+    this.checkIA();
+  }
+
+  checkIA(): void {
+    this.checkingIA = true;
+    this.showIAStatus = true;
+    this.reportesApi.getEstadoIA().subscribe({
+      next: (estado) => {
+        this.estadoIA = estado;
+        this.checkingIA = false;
+      },
+      error: () => {
+        this.estadoIA = {
+          ollama_disponible: false,
+          url: '',
+          modelo_configurado: 'desconocido',
+          modelos_instalados: [],
+        };
+        this.checkingIA = false;
+      },
+    });
+  }
+
+  onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      this.archivoAudio = input.files[0];
+    }
+  }
+
+  toggleModoAudio(): void {
+    this.modoAudio = !this.modoAudio;
+    this.archivoAudio = null;
+    this.reporteGenerado = null;
+    this.pdfBlobUrl = null;
+    this.errorMsg = '';
+  }
+
+  generar(): void {
+    if (this.modoAudio && !this.archivoAudio) {
+      this.errorMsg = 'Debes seleccionar un archivo de audio.';
+      return;
+    }
+    if (!this.modoAudio && !this.prompt.trim()) {
+      this.errorMsg = 'Debes escribir un prompt para generar el reporte.';
+      return;
+    }
+
     this.loading = true;
     this.errorMsg = '';
+    this.reporteGenerado = null;
+    this.pdfBlobUrl = null;
 
-    const f: DashboardFiltros = { ...this.filtros };
-    if (this.desde) f.desde = this.desde;
-    if (this.hasta) f.hasta = this.hasta;
+    const obs = this.modoAudio
+      ? this.reportesApi.generarReporteAudio(this.archivoAudio!, this.formato)
+      : this.reportesApi.generarReporte(this.prompt, this.formato);
 
-    this.dashboardApi.getDashboard(f).subscribe({
-      next: (data) => {
-        this.resumen = data.resumen;
-        this.porEstado = data.por_estado || [];
-        this.serieTemporal = data.serie_temporal || [];
-        this.tiposIncidentes = data.tipos_incidentes || [];
-        this.zonasMasIncidentes = data.zonas_mas_incidentes || [];
-        this.talleresEficientes = data.talleres_eficientes || [];
-        this.mapaIncidentes = data.mapa_incidentes || [];
+    obs.subscribe({
+      next: (result) => {
+        if (result instanceof Blob) {
+          // PDF
+          const url = URL.createObjectURL(result);
+          this.pdfBlobUrl = url;
+          this.pdfFileName = `reporte_${Date.now()}.pdf`;
+          this.guardarEnHistorial(this.prompt || 'Reporte por audio', this.formato, 'PDF generado');
+        } else {
+          // Texto
+          this.reporteGenerado = result;
+          this.guardarEnHistorial(
+            result.metadata.prompt_original || this.prompt || 'Reporte por audio',
+            this.formato,
+            result.reporte
+          );
+        }
         this.loading = false;
       },
       error: (err) => {
-        this.errorMsg = err?.error?.detail || 'Error al cargar el dashboard.';
+        this.errorMsg = err?.error?.detail || err?.message || 'Error al generar el reporte. Verifica que Ollama esté disponible.';
         this.loading = false;
       },
     });
   }
 
-  setTab(tab: 'resumen' | 'estados' | 'timeline' | 'talleres' | 'mapa'): void {
+  descargarPDF(): void {
+    if (this.pdfBlobUrl) {
+      const a = document.createElement('a');
+      a.href = this.pdfBlobUrl;
+      a.download = this.pdfFileName;
+      a.click();
+    }
+  }
+
+  private guardarEnHistorial(prompt: string, formato: string, reporte: string): void {
+    const entry: HistorialEntry = {
+      id: Date.now(),
+      prompt: prompt.slice(0, 100),
+      formato,
+      reporte: reporte.slice(0, 300),
+      fecha: new Date().toISOString(),
+      modelo: this.estadoIA?.modelo_configurado || 'desconocido',
+    };
+    this.historial.unshift(entry);
+    if (this.historial.length > 50) this.historial = this.historial.slice(0, 50);
+    localStorage.setItem('reportes_historial', JSON.stringify(this.historial));
+  }
+
+  limpiarHistorial(): void {
+    this.historial = [];
+    localStorage.removeItem('reportes_historial');
+  }
+
+  nuevoReporte(): void {
+    this.reporteGenerado = null;
+    this.pdfBlobUrl = null;
+    this.errorMsg = '';
+    this.prompt = '';
+    this.archivoAudio = null;
+  }
+
+  copiarReporte(): void {
+    if (this.reporteGenerado?.reporte) {
+      navigator.clipboard.writeText(this.reporteGenerado.reporte);
+    }
+  }
+
+  setTab(tab: 'generar' | 'historial'): void {
     this.activeTab = tab;
   }
-
-  get maxSerieCantidad(): number {
-    return Math.max(...this.serieTemporal.map((p) => p.cantidad), 1);
-  }
-
-  get maxTipoCantidad(): number {
-    return Math.max(...this.tiposIncidentes.map((t) => t.cantidad), 1);
-  }
-
-  getEstadoColor(estado: string): string {
-    const colors: Record<string, string> = {
-      pendiente: '#f59e0b',
-      aceptada: '#3b82f6',
-      asignada: '#8b5cf6',
-      en_proceso: '#6366f1',
-      atendida: '#10b981',
-      completada: '#059669',
-      cancelada: '#ef4444',
-    };
-    return colors[estado] || '#6b7280';
-  }
 }
+

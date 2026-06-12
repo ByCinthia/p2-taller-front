@@ -21,6 +21,7 @@ import { ServicioComponent } from './features/administrador/catalogos/servicios/
 import { UbicacionTallerComponent } from './features/administrador/ubicacion_taller/ubicacion_taller.component';
 import { PagosComponent } from './features/administrador/pagos/pagos.component';
 import { ReportesComponent } from './features/administrador/reportes/reportes.component';
+import { DashboardComponent } from './features/administrador/dashboard/dashboard.component';
 import { ConfiguracionComponent } from './features/administrador/configuracion/configuracion.component';
 import { AdminProfileComponent } from './features/administrador/perfil_admin/perfil_admin.component';
 import { AdminNotificationsComponent } from './features/administrador/notificaciones_admin/notificaciones_admin.component';
@@ -76,6 +77,7 @@ export const appRoutes: Routes = [
       { path: 'admin/solicitudes/asignadas', component: AdminSolicitudesAsignadasComponent },
       { path: 'admin/solicitudes/en-proceso', component: AdminSolicitudesEnProcesoComponent },
       { path: 'admin/solicitudes/atendidas', component: AdminSolicitudesAtendidasComponent },
+      { path: 'admin/dashboard', component: DashboardComponent },
       { path: 'taller/ubicacion', component: UbicacionTallerComponent },
       { path: 'taller/pagos', component: PagosComponent },
       { path: 'taller/reportes', component: ReportesComponent },
