@@ -172,6 +172,30 @@ export class IncidenteApiService {
   return this.http.get<TecnicoCercanoDto[]>(`${this.base}/incidentes/tecnicos/disponibles`);
 }
 
+  getDiagnosticos(incidenteId: string) {
+    return this.http.get<any[]>(`${this.base}/incidentes/${incidenteId}/diagnosticos`);
+  }
+
+  updateDiagnostico(diagnosticoId: string, payload: DiagnosticoCreate) {
+    return this.http.put(`${this.base}/incidentes/diagnosticos/${diagnosticoId}`, payload);
+  }
+
+  ignoreIncident(incidenteId: string, empresaId: string) {
+    return this.http.post(`${this.base}/incidentes/${incidenteId}/ignorar`, { empresa_id: empresaId });
+  }
+
+  autoAsignar(incidenteId: string, radioKm = 5.0) {
+    return this.http.post<any>(`${this.base}/incidentes/${incidenteId}/auto-asignar`, {}, {
+      params: { radio_km: radioKm },
+    });
+  }
+
+  listTalleresCercanos(latitud: number, longitud: number, radioKm = 5.0, servicio?: string) {
+    const params: any = { latitud, longitud, radio_km: radioKm };
+    if (servicio) params.servicio = servicio;
+    return this.http.get<any[]>(`${this.base}/incidentes/talleres/cercanos`, { params });
+  }
+
   getTrackingWebSocketUrl(id: string): string {
     const normalized = this.base.replace(/\/$/, '');
     const wsBase = normalized.startsWith('https://')

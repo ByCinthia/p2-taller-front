@@ -5,7 +5,7 @@
 
     <div class="alert-header">
       <div class="header-main">
-        <span class="warning-icon">🚨</span>
+        <i class="bi bi-exclamation-triangle-fill warning-icon"></i>
         <div class="header-titles">
           <h3>Nueva Solicitud de Auxilio</h3>
           <span class="service-type-badge">{{ incidente.tipo }}</span>
@@ -22,7 +22,7 @@
       <!-- Carrusel de Evidencias Multimedia -->
       <div class="multimedia-section" *ngIf="incidente.evidencias && incidente.evidencias.length > 0">
         <div class="carousel-container">
-          <button class="carousel-control prev" (click)="prevSlide()" *ngIf="incidente.evidencias.length > 1">‹</button>
+          <button class="carousel-control prev" (click)="prevSlide()" *ngIf="incidente.evidencias.length > 1"><i class="bi bi-chevron-left"></i></button>
           
           <div class="carousel-slides">
             <div class="carousel-slide" *ngFor="let ev of incidente.evidencias; let i = index" [class.active]="i === currentSlide">
@@ -31,19 +31,19 @@
               
               <!-- Evidencia Tipo AUDIO -->
               <div class="audio-container" *ngIf="ev.tipo === 'audio'">
-                <span class="audio-icon">🎵 Evidencia de Audio</span>
+                <span class="audio-icon"><i class="bi bi-music-note-beamed"></i> Evidencia de Audio</span>
                 <audio [src]="ev.url_archivo" controls class="audio-element"></audio>
               </div>
 
               <!-- Evidencia de Texto o Nota -->
               <div class="text-evidence-container" *ngIf="ev.tipo === 'texto' || ev.texto">
-                <span class="text-icon">📝 Detalle</span>
+                <span class="text-icon"><i class="bi bi-file-text"></i> Detalle</span>
                 <p class="text-evidence-content">{{ ev.texto }}</p>
               </div>
             </div>
           </div>
 
-          <button class="carousel-control next" (click)="nextSlide()" *ngIf="incidente.evidencias.length > 1">›</button>
+          <button class="carousel-control next" (click)="nextSlide()" *ngIf="incidente.evidencias.length > 1"><i class="bi bi-chevron-right"></i></button>
         </div>
         <!-- Indicadores del carrusel -->
         <div class="carousel-indicators" *ngIf="incidente.evidencias.length > 1">

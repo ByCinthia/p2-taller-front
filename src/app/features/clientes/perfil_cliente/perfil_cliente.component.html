@@ -144,7 +144,7 @@
     <div class="modal-content" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <h3>Detalle de notificación</h3>
-        <button class="btn-close" (click)="closeNotificationDetail()">✕</button>
+        <button class="btn-close" (click)="closeNotificationDetail()"><i class="bi bi-x-lg"></i></button>
       </div>
 
       <div class="modal-body">
@@ -222,10 +222,10 @@
 
         <div class="solicitud-actions">
           <button class="btn btn-secondary" type="button" (click)="abrirMapa(solicitud)">
-            📍 Ver en mapa
+            <i class="bi bi-geo-alt-fill"></i> Ver en mapa
           </button>
           <button class="btn btn-ghost" type="button" (click)="verDetalleTracking(solicitud)">
-            📊 Seguimiento en vivo
+            <i class="bi bi-bar-chart-fill"></i> Seguimiento en vivo
           </button>
         </div>
       </article>

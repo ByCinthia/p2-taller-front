@@ -31,6 +31,10 @@ export class UserManagementApiService {
     return this.http.get<Cargo[]>(`${this.base}/cargos/`);
   }
 
+  getCargoById(id: string): Observable<Cargo> {
+    return this.http.get<Cargo>(`${this.base}/cargos/${id}/`);
+  }
+
   createCargo(payload: { nombre: string; descripcion: string | null }): Observable<Cargo> {
     return this.http.post<Cargo>(`${this.base}/cargos/`, payload);
   }
@@ -45,6 +49,10 @@ export class UserManagementApiService {
 
   getServicios(): Observable<Servicio[]> {
     return this.http.get<Servicio[]>(`${this.base}/servicios/`);
+  }
+
+  getServicioById(id: string): Observable<Servicio> {
+    return this.http.get<Servicio>(`${this.base}/servicios/${id}/`);
   }
 
   createServicio(payload: { nombre: string; descripcion: string | null; activo: boolean }): Observable<Servicio> {
@@ -66,6 +74,10 @@ export class UserManagementApiService {
     return this.http.get<Rol[]>(`${this.base}/roles/`);
   }
 
+  getRoleById(id: string): Observable<Rol> {
+    return this.http.get<Rol>(`${this.base}/roles/${id}/`);
+  }
+
   createRole(payload: { nombre: string; permisos: string[] }): Observable<Rol> {
     return this.http.post<Rol>(`${this.base}/roles/`, payload);
   }
@@ -80,6 +92,10 @@ export class UserManagementApiService {
 
   getPermisos(): Observable<Permiso[]> {
     return this.http.get<Permiso[]>(`${this.base}/permisos/`);
+  }
+
+  getPermisoById(id: string): Observable<Permiso> {
+    return this.http.get<Permiso>(`${this.base}/permisos/${id}/`);
   }
 
   createPermiso(payload: { nombre: string; descripcion: string }): Observable<Permiso> {

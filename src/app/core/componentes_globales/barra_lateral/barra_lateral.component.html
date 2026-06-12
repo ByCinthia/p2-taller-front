@@ -11,7 +11,7 @@
     <div class="stars">
       <span *ngFor="let star of getStarArray(empresa.estrellas_promedio)" 
             class="star" 
-            [class.filled]="star === 1">★</span>
+            [class.filled]="star === 1"><i class="bi bi-star-fill"></i></span>
     </div>
     <p class="reputation-text">{{ empresa.estrellas_promedio | number:'1.0-2' }} / 5.0</p>
     <p class="reputation-count">({{ empresa.total_calificaciones || 0 }} calificaciones)</p>

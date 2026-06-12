@@ -175,10 +175,10 @@
             <div class="muted tiny" style="margin-top:0.25rem;">Prioridad: {{ it.prioridad || 'N/A' }} • Ubicación: {{ it.latitud | number:'1.0-4' }}, {{ it.longitud | number:'1.0-4' }}</div>
           </div>
           <div style="display:flex;gap:0.5rem;flex-wrap:wrap;justify-content:flex-end;">
-            <button class="btn btn-primary" (click)="acceptIncident(it)">✓ Aceptar Solicitud</button>
+            <button class="btn btn-primary" (click)="acceptIncident(it)"><i class="bi bi-check-lg"></i> Aceptar Solicitud</button>
             <button class="btn btn-ghost" *ngIf="it.estado !== 'pendiente'" (click)="openTracking(it)">Ver ubicación</button>
             <button class="btn btn-danger" *ngIf="it.estado === 'aceptada' && it.accepted_empresa_id === auth.currentUser?.empresa_id" (click)="cancelarAceptacion(it)">
-                ✖ Cancelar servicio
+                <i class="bi bi-x-lg"></i> Cancelar servicio
               </button>
           </div>
         </li>

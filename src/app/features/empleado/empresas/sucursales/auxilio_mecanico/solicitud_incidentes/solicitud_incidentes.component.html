@@ -142,24 +142,24 @@
             <!-- SOLO CUANDO ESTÁ PENDIENTE: Solo botón Aceptar -->
             <ng-container *ngIf="incidente.estado === 'pendiente'">
               <button class="btn btn-primary" (click)="aceptarSolicitud(incidente)">
-                ✓ Aceptar Solicitud
+                <i class="bi bi-check-lg"></i> Aceptar Solicitud
               </button>
             </ng-container>
 
             <!-- DESPUÉS DE ACEPTAR: Mostrar los demás botones -->
             <ng-container *ngIf="incidente.estado !== 'pendiente'">
               <button class="btn btn-secondary" (click)="abrirMapa(incidente)">
-                📍 Ver en mapa
+                <i class="bi bi-geo-alt-fill"></i> Ver en mapa
               </button>
               <button class="btn btn-ghost" (click)="verTracking(incidente)">
-                📊 Ver tracking
+                <i class="bi bi-bar-chart-fill"></i> Ver tracking
               </button>
               <!-- Mostrar botón Asignar solo si ya fue aceptada por esta empresa -->
               <button class="btn btn-primary" *ngIf="incidente.estado === 'aceptada' && incidente.accepted_empresa_id === auth.currentUser?.empresa_id" (click)="abrirModalAsignar(incidente)">
-                👤 Asignar técnico
+                <i class="bi bi-person-fill"></i> Asignar técnico
               </button>
               <button class="btn btn-danger" *ngIf="incidente.estado === 'aceptada' && incidente.accepted_empresa_id === auth.currentUser?.empresa_id" (click)="cancelarAceptacion(incidente)">
-                ✖ Cancelar servicio
+                <i class="bi bi-x-lg"></i> Cancelar servicio
               </button>
             </ng-container>
           </div>
@@ -226,10 +226,10 @@
           <!-- Botones de acción -->
           <div class="card-actions">
             <button class="btn btn-secondary" (click)="abrirMapa(incidente)">
-              📍 Ver en mapa
+              <i class="bi bi-geo-alt-fill"></i> Ver en mapa
             </button>
             <button class="btn btn-ghost" (click)="verTracking(incidente)">
-              📊 Ver tracking
+              <i class="bi bi-bar-chart-fill"></i> Ver tracking
             </button>
           </div>
         </div>
@@ -300,7 +300,7 @@
         <!-- Botones de acción -->
         <div class="card-actions">
           <button class="btn btn-secondary" (click)="abrirMapa(incidente)">
-            📍 Ver en mapa
+            <i class="bi bi-geo-alt-fill"></i> Ver en mapa
           </button>
           <button
             class="btn btn-primary"
@@ -308,10 +308,10 @@
             [disabled]="incidente.estado !== 'pendiente'"
             *ngIf="isAdminView"
           >
-            👤 Asignar técnico
+            <i class="bi bi-person-fill"></i> Asignar técnico
           </button>
           <button class="btn btn-ghost" (click)="verTracking(incidente)">
-            📊 Ver tracking
+            <i class="bi bi-bar-chart-fill"></i> Ver tracking
           </button>
         </div>
       </div>
@@ -323,7 +323,7 @@
     <div class="modal-content" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <h3>Asignar Técnico</h3>
-        <button class="btn-close" (click)="cerrarModalAsignar()">✕</button>
+        <button class="btn-close" (click)="cerrarModalAsignar()"><i class="bi bi-x-lg"></i></button>
       </div>
 
       <div class="modal-body">

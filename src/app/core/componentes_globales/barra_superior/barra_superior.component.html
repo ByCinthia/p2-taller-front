@@ -8,7 +8,7 @@
 
   <div class="right-section" *ngIf="auth.currentUser as user">
     <button class="notification-bell-btn" (click)="verNotificaciones()" title="Ver Notificaciones">
-      <span class="bell-icon">🔔</span>
+      <i class="bi bi-bell bell-icon"></i>
       <span class="notification-badge" *ngIf="(unreadCount$ | async) as count">{{ count }}</span>
     </button>
 

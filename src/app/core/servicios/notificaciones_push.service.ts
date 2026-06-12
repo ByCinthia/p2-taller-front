@@ -126,7 +126,7 @@ export class PushNotificationService {
     try {
       const payload: FcmTokenRequest = { fcm_token: token };
       await this.http
-        .patch<{ message: string }>(`${environment.apiBaseUrl}/api/auth/fcm-token`, payload)
+        .patch<{ message: string }>(`${environment.apiBaseUrl}/fcm-token`, payload)
         .toPromise();
 
       this.tokenSent = true;
@@ -147,7 +147,7 @@ export class PushNotificationService {
     try {
       const payload: FcmTokenRequest = { fcm_token: null };
       await this.http
-        .patch<{ message: string }>(`${environment.apiBaseUrl}/api/auth/fcm-token`, payload)
+        .patch<{ message: string }>(`${environment.apiBaseUrl}/fcm-token`, payload)
         .toPromise();
 
       this.tokenSent = false;

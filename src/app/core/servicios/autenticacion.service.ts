@@ -159,6 +159,12 @@ export class AuthService {
       console.error('[AuthService] Error clearing FCM token on logout:', error);
     }
 
+    try {
+      await this.logoutFromBackend().toPromise();
+    } catch (error) {
+      console.error('[AuthService] Error calling backend logout:', error);
+    }
+
     localStorage.removeItem(this.tokenKey);
     localStorage.removeItem(this.refreshKey);
     this.isAuthenticatedSubject.next(false);
@@ -180,6 +186,26 @@ export class AuthService {
       switchMap(() => this.loadMyPermissions()),
       switchMap(() => of({ access: this.token ?? '', refresh })),
     );
+  }
+
+  getMe(): Observable<{
+    id: number;
+    username: string;
+    email: string;
+    first_name: string;
+    last_name: string;
+    role: string;
+    es_admin: boolean;
+    empresa_id: string | null;
+    cliente_id: string | null;
+    is_active: boolean;
+    created_at: string;
+  }> {
+    return this.http.get<any>(`${environment.apiBaseUrl}/me`);
+  }
+
+  logoutFromBackend(): Observable<void> {
+    return this.http.post<void>(`${environment.apiBaseUrl}/logout`, {});
   }
 
   private restoreSession(): void {

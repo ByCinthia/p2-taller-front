@@ -1,10 +1,71 @@
 <section class="card page-block">
   <header class="head">
     <h2>Pagos / Comisiones</h2>
-    <p class="muted">Gestión de pagos y comisiones (placeholder).</p>
+    <p class="muted">Gestión de pagos registrados en el sistema.</p>
   </header>
+
+  <div class="toolbar">
+    <select [(ngModel)]="filterEstado" class="filter-select">
+      <option value="">Todos los estados</option>
+      <option value="pendiente">Pendientes</option>
+      <option value="confirmado">Confirmados</option>
+      <option value="rechazado">Rechazados</option>
+    </select>
+    <button class="btn btn-sm" (click)="load()"><i class="bi bi-arrow-clockwise"></i> Actualizar</button>
+  </div>
+
   <div class="inner">
-    <p>Funcionalidad no implementada aún.</p>
+    <div *ngIf="loading" class="loading">Cargando pagos…</div>
+    <div *ngIf="errorMsg" class="error-msg">{{ errorMsg }}</div>
+
+    <div *ngIf="!loading && !errorMsg && filteredPagos.length === 0" class="empty-state">
+      No hay pagos registrados.
+    </div>
+
+    <table *ngIf="!loading && filteredPagos.length > 0" class="data-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Asignación</th>
+          <th>Monto</th>
+          <th>Método</th>
+          <th>Estado</th>
+          <th>Fecha</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let pago of filteredPagos">
+          <td class="mono">{{ pago.id }}</td>
+          <td class="mono">{{ pago.asignacion_id }}</td>
+          <td>{{ pago.monto_total }} Bs</td>
+          <td>{{ pago.metodo_pago }}</td>
+          <td>
+            <span class="badge" [ngClass]="getEstadoBadge(pago.estado)">
+              {{ pago.estado }}
+            </span>
+          </td>
+          <td>{{ pago.creado_en | date:'short' }}</td>
+          <td class="actions">
+            <button
+              *ngIf="pago.estado === 'pendiente'"
+              class="btn btn-sm btn-success"
+              (click)="confirmar(pago.id)"
+            >
+              <i class="bi bi-check-lg"></i> Confirmar
+            </button>
+            <button
+              *ngIf="pago.estado === 'pendiente'"
+              class="btn btn-sm btn-danger"
+              (click)="rechazar(pago.id)"
+            >
+              <i class="bi bi-x-lg"></i> Rechazar
+            </button>
+            <span *ngIf="pago.estado !== 'pendiente'" class="muted">—</span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
   </div>
 </section>
 

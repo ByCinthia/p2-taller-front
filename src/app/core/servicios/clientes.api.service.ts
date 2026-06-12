@@ -113,4 +113,29 @@ export class ClienteApiService {
   setPrincipal(vehiculoId: string) {
     return this.http.patch<VehiculoDto>(`${this.base}/vehiculos/${vehiculoId}/principal`, {});
   }
+
+  getMyVehiculo(vehiculoId: string) {
+    return this.http.get<VehiculoDto>(`${this.base}/clientes/me/vehiculos/${vehiculoId}`);
+  }
+
+  deleteMyVehiculo(vehiculoId: string) {
+    return this.http.delete(`${this.base}/clientes/me/vehiculos/${vehiculoId}`);
+  }
+
+  countMyVehiculos() {
+    return this.http.get<{ count: number }>(`${this.base}/clientes/me/vehiculos/count`);
+  }
+
+  getHistorial(clienteId: string) {
+    return this.http.get<any[]>(`${this.base}/clientes/${clienteId}/historial`);
+  }
+
+  // Admin vehiculo endpoints
+  listAllVehiculos() {
+    return this.http.get<VehiculoDto[]>(`${this.base}/vehiculos/`);
+  }
+
+  listVehiculosAtendidos() {
+    return this.http.get<VehiculoDto[]>(`${this.base}/vehiculos/atendidos`);
+  }
 }

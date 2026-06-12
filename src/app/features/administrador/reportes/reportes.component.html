@@ -1,10 +1,231 @@
 <section class="card page-block">
   <header class="head">
-    <h2>Reportes</h2>
-    <p class="muted">Reportes y estadísticas (placeholder).</p>
+    <h2>Dashboard</h2>
+    <p class="muted">Panel de indicadores y métricas del sistema.</p>
   </header>
+
+  <!-- Filtros -->
+  <div class="filters">
+    <div class="filter-group">
+      <label>Desde</label>
+      <input type="date" [(ngModel)]="desde" class="filter-input" />
+    </div>
+    <div class="filter-group">
+      <label>Hasta</label>
+      <input type="date" [(ngModel)]="hasta" class="filter-input" />
+    </div>
+    <div class="filter-group">
+      <label>Intervalo</label>
+      <select [(ngModel)]="filtros.intervalo" class="filter-input">
+        <option value="day">Día</option>
+        <option value="week">Semana</option>
+        <option value="month">Mes</option>
+      </select>
+    </div>
+    <button class="btn btn-primary" (click)="load()"><i class="bi bi-arrow-clockwise"></i> Actualizar</button>
+  </div>
+
+  <!-- Tabs -->
+  <nav class="tabs">
+    <button [class.active]="activeTab === 'resumen'" (click)="setTab('resumen')"><i class="bi bi-bar-chart-fill"></i> Resumen</button>
+    <button [class.active]="activeTab === 'estados'" (click)="setTab('estados')"><i class="bi bi-pie-chart-fill"></i> Por Estado</button>
+    <button [class.active]="activeTab === 'timeline'" (click)="setTab('timeline')"><i class="bi bi-graph-up-arrow"></i> Línea de Tiempo</button>
+    <button [class.active]="activeTab === 'talleres'" (click)="setTab('talleres')"><i class="bi bi-trophy-fill"></i> Talleres</button>
+    <button [class.active]="activeTab === 'mapa'" (click)="setTab('mapa')"><i class="bi bi-map-fill"></i> Mapa</button>
+  </nav>
+
   <div class="inner">
-    <p>Funcionalidad no implementada aún.</p>
+    <div *ngIf="loading" class="loading">Cargando dashboard…</div>
+    <div *ngIf="errorMsg" class="error-msg">{{ errorMsg }}</div>
+
+    <!-- ═══════════ TAB: RESUMEN ═══════════ -->
+    <div *ngIf="resumen && activeTab === 'resumen' && !loading" class="content-area">
+
+      <!-- KPI Cards -->
+      <div class="kpi-grid">
+        <div class="kpi-card kpi-blue">
+          <span class="kpi-icon"><i class="bi bi-clipboard-data-fill"></i></span>
+          <div>
+            <span class="kpi-value">{{ resumen.total_incidentes }}</span>
+            <span class="kpi-label">Total Incidentes</span>
+          </div>
+        </div>
+        <div class="kpi-card kpi-yellow">
+          <span class="kpi-icon"><i class="bi bi-hourglass-split"></i></span>
+          <div>
+            <span class="kpi-value">{{ resumen.incidentes_pendientes }}</span>
+            <span class="kpi-label">Pendientes</span>
+          </div>
+        </div>
+        <div class="kpi-card kpi-green">
+          <span class="kpi-icon"><i class="bi bi-check-circle-fill"></i></span>
+          <div>
+            <span class="kpi-value">{{ resumen.incidentes_atendidos }}</span>
+            <span class="kpi-label">Atendidos</span>
+          </div>
+        </div>
+        <div class="kpi-card kpi-red">
+          <span class="kpi-icon"><i class="bi bi-x-circle-fill"></i></span>
+          <div>
+            <span class="kpi-value">{{ resumen.incidentes_cancelados }}</span>
+            <span class="kpi-label">Cancelados</span>
+          </div>
+        </div>
+        <div class="kpi-card kpi-purple">
+          <span class="kpi-icon"><i class="bi bi-building"></i></span>
+          <div>
+            <span class="kpi-value">{{ resumen.total_talleres }}</span>
+            <span class="kpi-label">Talleres</span>
+          </div>
+        </div>
+        <div class="kpi-card kpi-teal">
+          <span class="kpi-icon"><i class="bi bi-people-fill"></i></span>
+          <div>
+            <span class="kpi-value">{{ resumen.total_clientes }}</span>
+            <span class="kpi-label">Clientes</span>
+          </div>
+        </div>
+        <div class="kpi-card kpi-orange">
+          <span class="kpi-icon"><i class="bi bi-wrench"></i></span>
+          <div>
+            <span class="kpi-value">{{ resumen.total_tecnicos }}</span>
+            <span class="kpi-label">Técnicos</span>
+          </div>
+        </div>
+        <div class="kpi-card kpi-gold">
+          <span class="kpi-icon"><i class="bi bi-star-fill"></i></span>
+          <div>
+            <span class="kpi-value">{{ resumen.promedio_estrellas_talleres | number:'1.1-1' }}</span>
+            <span class="kpi-label">Prom. Estrellas</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mini bar chart: tipos -->
+      <div class="section-block" *ngIf="tiposIncidentes.length > 0">
+        <h3>Incidentes por tipo</h3>
+        <div class="bar-chart">
+          <div *ngFor="let item of tiposIncidentes" class="bar-row">
+            <span class="bar-label">{{ item.tipo || 'Sin tipo' }}</span>
+            <div class="bar-track">
+              <div class="bar-fill" [style.width.%]="(item.cantidad / maxTipoCantidad) * 100"></div>
+            </div>
+            <span class="bar-value">{{ item.cantidad }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════ TAB: POR ESTADO ═══════════ -->
+    <div *ngIf="activeTab === 'estados' && !loading" class="content-area">
+      <div class="section-block">
+        <h3>Incidentes por estado</h3>
+        <div class="estado-grid" *ngIf="porEstado.length > 0">
+          <div *ngFor="let e of porEstado" class="estado-card">
+            <div class="estado-bar" [style.background]="getEstadoColor(e.estado)" [style.width.%]="e.porcentaje"></div>
+            <div class="estado-info">
+              <span class="estado-nombre">{{ e.estado }}</span>
+              <span class="estado-stats">{{ e.cantidad }} ({{ e.porcentaje | number:'1.1-1' }}%)</span>
+            </div>
+          </div>
+        </div>
+        <p *ngIf="porEstado.length === 0" class="muted">Sin datos de estados.</p>
+      </div>
+    </div>
+
+    <!-- ═══════════ TAB: LÍNEA DE TIEMPO ═══════════ -->
+    <div *ngIf="activeTab === 'timeline' && !loading" class="content-area">
+      <div class="section-block">
+        <h3>Serie temporal de incidentes</h3>
+        <div class="timeline-chart" *ngIf="serieTemporal.length > 0">
+          <div class="timeline-bars">
+            <div *ngFor="let punto of serieTemporal" class="timeline-col">
+              <div class="timeline-bar-wrapper">
+                <div
+                  class="timeline-bar"
+                  [style.height.%]="(punto.cantidad / maxSerieCantidad) * 100"
+                  [title]="punto.fecha + ': ' + punto.cantidad"
+                ></div>
+              </div>
+              <span class="timeline-label">{{ punto.fecha | date:'shortDate' }}</span>
+            </div>
+          </div>
+        </div>
+        <p *ngIf="serieTemporal.length === 0" class="muted">Sin datos temporales.</p>
+      </div>
+    </div>
+
+    <!-- ═══════════ TAB: TALLERES ═══════════ -->
+    <div *ngIf="activeTab === 'talleres' && !loading" class="content-area">
+      <div class="section-block">
+        <h3>Ranking de talleres</h3>
+        <table class="data-table" *ngIf="talleresEficientes.length > 0">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Taller</th>
+              <th>Solicitudes</th>
+              <th>T. Asignación</th>
+              <th>T. Resolución</th>
+              <th>Estrellas</th>
+              <th>Eficiencia</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let t of talleresEficientes; let i = index">
+              <td class="rank">{{ i + 1 }}</td>
+              <td>{{ t.nombre }}</td>
+              <td>{{ t.total_solicitudes }}</td>
+              <td>{{ t.tiempo_promedio_asignacion_min !== null ? (t.tiempo_promedio_asignacion_min | number:'1.0-0') + ' min' : 'N/A' }}</td>
+              <td>{{ t.tiempo_promedio_resolucion_min !== null ? (t.tiempo_promedio_resolucion_min | number:'1.0-0') + ' min' : 'N/A' }}</td>
+              <td><i class="bi bi-star-fill"></i> {{ t.estrellas_promedio | number:'1.1-1' }}</td>
+              <td>
+                <span class="efficiency-badge">{{ t.puntuacion_eficiencia | number:'1.1-1' }}</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <p *ngIf="talleresEficientes.length === 0" class="muted">Sin datos de talleres.</p>
+      </div>
+    </div>
+
+    <!-- ═══════════ TAB: MAPA ═══════════ -->
+    <div *ngIf="activeTab === 'mapa' && !loading" class="content-area">
+      <div class="section-block">
+        <h3>Mapa de incidentes</h3>
+        <p class="muted" *ngIf="mapaIncidentes.length > 0">{{ mapaIncidentes.length }} incidentes geolocalizados.</p>
+        <table class="data-table" *ngIf="mapaIncidentes.length > 0">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Tipo</th>
+              <th>Estado</th>
+              <th>Lat</th>
+              <th>Lng</th>
+              <th>Cliente</th>
+              <th>Taller</th>
+              <th>Fecha</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let m of mapaIncidentes">
+              <td class="mono">{{ m.incidente_id | slice:0:8 }}…</td>
+              <td>{{ m.tipo || '—' }}</td>
+              <td>
+                <span class="estado-pill" [style.background]="getEstadoColor(m.estado)">{{ m.estado }}</span>
+              </td>
+              <td>{{ m.latitud | number:'1.4-4' }}</td>
+              <td>{{ m.longitud | number:'1.4-4' }}</td>
+              <td>{{ m.cliente_nombre || '—' }}</td>
+              <td>{{ m.taller_nombre || '—' }}</td>
+              <td>{{ m.creado_en | date:'short' }}</td>
+            </tr>
+          </tbody>
+        </table>
+        <p *ngIf="mapaIncidentes.length === 0" class="muted">Sin incidentes geolocalizados.</p>
+      </div>
+    </div>
+
   </div>
 </section>
 
