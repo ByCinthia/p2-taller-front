@@ -148,8 +148,22 @@ export class AuthService {
     return !!this.currentUser?.is_admin;
   }
 
+  get hasAdminPermission(): boolean {
+    return this.hasPermission('manage_empleado') || 
+           this.hasPermission('manage_rol') || 
+           this.hasPermission('manage_servicio');
+  }
+
+  get isEmpleadoTecnico(): boolean {
+    const user = this.currentUser;
+    if (!user) return false;
+    return !this.isClient && !this.isAdmin && !this.hasAdminPermission;
+  }
+
   getDefaultAppRoute(): string {
-    return this.isClient ? '/app/cliente/perfil' : '/app/empleados';
+    if (this.isClient) return '/app/cliente/perfil';
+    if (this.isAdmin || this.hasAdminPermission) return '/app/empleados';
+    return '/app/empleado/perfil';
   }
 
   async logout(): Promise<void> {

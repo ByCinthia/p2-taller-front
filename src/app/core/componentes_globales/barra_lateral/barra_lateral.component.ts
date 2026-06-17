@@ -28,10 +28,8 @@ export class SidebarComponent implements OnInit {
     }
   }
 
-  get hasAdminPermission(): boolean {
-    return this.auth.hasPermission('manage_empleado') || 
-           this.auth.hasPermission('manage_rol') || 
-           this.auth.hasPermission('manage_servicio');
+  get isEmpleadoTecnico(): boolean {
+    return !this.auth.isClient && !this.auth.hasAdminPermission;
   }
 
   getStarArray(rating: number | undefined): number[] {

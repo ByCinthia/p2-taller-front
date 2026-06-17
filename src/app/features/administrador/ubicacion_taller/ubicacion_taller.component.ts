@@ -1,6 +1,7 @@
 import { Component, AfterViewInit, OnDestroy, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { EmpresaApiService, EmpresaDto } from '../../services/empresa.service';
+import { AuthService } from '../../services/auth/auth.service';
 
 import * as L from 'leaflet';
 
@@ -18,7 +19,11 @@ export class UbicacionTallerComponent implements AfterViewInit, OnDestroy {
   longitud: number | null = null;
   message = '';
 
-  constructor(private readonly empresa: EmpresaApiService, private readonly ngZone: NgZone) {}
+  constructor(
+    private readonly empresa: EmpresaApiService, 
+    private readonly ngZone: NgZone,
+    public readonly auth: AuthService
+  ) {}
 
   get hasSelection() {
     return this.latitud != null && this.longitud != null;
@@ -64,6 +69,9 @@ export class UbicacionTallerComponent implements AfterViewInit, OnDestroy {
     }).addTo(this.map);
 
     this.map.on('click', (e: L.LeafletMouseEvent) => {
+      // solo admins pueden editar
+      if (!this.auth.isAdmin || !this.auth.hasAdminPermission) return;
+      
       // run inside Angular zone to update bindings
       this.ngZone.run(() => {
         const { lat, lng } = e.latlng;

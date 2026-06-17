@@ -44,6 +44,7 @@ export interface Empleado {
 	sueldo: number;
 	cargo: string | null;
 	empresa: string;
+	empresa_nombre?: string | null;
 	foto_perfil: string | null;
 	roles: string[];
 	roles_asignados: Rol[];

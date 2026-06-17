@@ -1,13 +1,13 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 
 import { IncidenteApiService, IncidenteDto } from '../../services/incidente.service';
 
 @Component({
   selector: 'app-incident-history',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule],
   templateUrl: './historial_solicitudes.component.html',
   styleUrls: ['./historial_solicitudes.component.css'],
 })

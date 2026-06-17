@@ -31,8 +31,16 @@
         <div><span class="label">Teléfono</span><strong>{{ e.telefono || 'N/A' }}</strong></div>
         <div><span class="label">CI</span><strong>{{ e.ci }}</strong></div>
         <div><span class="label">Cargo</span><strong>{{ e.cargo_nombre || 'N/A' }}</strong></div>
-        <div><span class="label">Empresa</span><strong>{{ e.empresa }}</strong></div>
+        <div><span class="label">Empresa</span><strong>{{ e.empresa_nombre || e.empresa }}</strong></div>
         <div><span class="label">Sueldo</span><strong>{{ e.sueldo || '0' }}</strong></div>
+      </div>
+
+      <!-- Workshop Map Container -->
+      <div *ngIf="!loadingProfile" style="margin-top: 24px;">
+        <p class="eyebrow">Ubicación del Taller</p>
+        <div id="workshopMap" style="height: 300px; width: 100%; border-radius: 8px; border: 1px solid #ccc; background: #eee; position: relative;">
+          <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #888;">Cargando mapa...</div>
+        </div>
       </div>
     </article>
   </div>

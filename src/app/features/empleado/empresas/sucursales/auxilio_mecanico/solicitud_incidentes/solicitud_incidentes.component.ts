@@ -179,6 +179,7 @@ export class IncidentesComponent implements OnInit {
 
     this.api.list().subscribe({
       next: (data) => {
+        console.log('[cargarIncidentes] Data received:', data?.length);
         if (this.isAdminView) {
           // Separar en nuevas y atendidas para admin
           // Incluir variantes de 'asignada'/'asignado' además de pendientes y en_proceso
@@ -189,9 +190,9 @@ export class IncidentesComponent implements OnInit {
               'asignada',
               'asignado',
               'aceptada',
-            ].includes(inc.estado?.toLowerCase() || ''),
+            ].includes(inc.estado?.toLowerCase().trim() || ''),
           );
-          this.incidentsAtendidas = (data || []).filter((inc) => ['atendido', 'cerrado', 'finalizado', 'completado'].includes(inc.estado?.toLowerCase() || ''));
+          this.incidentsAtendidas = (data || []).filter((inc) => ['atendido', 'cerrado', 'finalizado', 'completada', 'completado', 'cancelada', 'cancelado'].includes(inc.estado?.toLowerCase().trim() || ''));
           this.incidents = data;
         } else {
           this.incidents = data;

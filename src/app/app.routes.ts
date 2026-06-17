@@ -17,6 +17,7 @@ import { VehiculosComponent } from './features/administrador/vehiculos/vehiculos
 import { IncidentesComponent } from './features/administrador/gestion_incidentes/gestion_incidentes.component';
 import { IncidentesComponent as SolicitudIncidentesComponent } from './features/empleado/empresas/sucursales/auxilio_mecanico/solicitud_incidentes/solicitud_incidentes.component';
 import { AsignacionesEmpleadoComponent } from './features/empleado/empresas/sucursales/auxilio_mecanico/asignaciones/asignaciones_empleado.component';
+import { EmpleadoAsignacionesComponent } from './features/empleado/asignaciones_unificadas/empleado-asignaciones.component';
 import { ServicioComponent } from './features/administrador/catalogos/servicios/servicios.component';
 import { UbicacionTallerComponent } from './features/administrador/ubicacion_taller/ubicacion_taller.component';
 import { PagosComponent } from './features/administrador/pagos/pagos.component';
@@ -42,6 +43,9 @@ export const appRoutes: Routes = [
     children: [
       { path: '', pathMatch: 'full', redirectTo: 'incidentes' },
       { path: 'empleado/perfil', component: EmpleadoPanelComponent },
+      { path: 'empleado/dashboard', component: DashboardComponent },
+      { path: 'empleado/notificaciones', component: AdminNotificationsComponent },
+      { path: 'empleado/asignaciones/:tipoFiltro', component: EmpleadoAsignacionesComponent },
       { path: 'empleado/asignaciones', component: AsignacionesEmpleadoComponent },
       { path: 'empleados/nuevo', component: EmpleadoComponent },
       { path: 'empleados', component: EmpleadoComponent },

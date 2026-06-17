@@ -1,0 +1,17 @@
+.error-state, .empty-state, .loading-state {
+  text-align: center;
+  padding: 3rem 1rem;
+}
+.empty-state i {
+  font-size: 3rem;
+  color: #ccc;
+}
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.table th, .table td {
+  padding: 0.75rem;
+  border-bottom: 1px solid #eee;
+  text-align: left;
+}

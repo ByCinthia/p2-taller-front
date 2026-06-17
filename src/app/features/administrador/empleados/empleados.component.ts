@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 import { AuthService } from '../../services/auth/auth.service';
 import { UserManagementApiService } from '../../services/user-management-api.service';
@@ -41,6 +41,7 @@ export class EmpleadoComponent implements OnInit {
     private readonly auth: AuthService,
     private readonly fb: FormBuilder,
     private readonly route: ActivatedRoute,
+    private readonly router: Router,
   ) {}
 
   get canManage(): boolean {
@@ -48,6 +49,11 @@ export class EmpleadoComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    if (this.auth.isEmpleadoTecnico) {
+      this.router.navigate(['/app/empleado/perfil']);
+      return;
+    }
+
     this.route.url.subscribe((segments) => {
       this.isCreateView = segments.some((s) => s.path === 'nuevo');
       if (this.isCreateView) {

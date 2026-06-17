@@ -27,7 +27,7 @@ export class TopbarComponent {
     } else if (this.auth.isClient) {
       this.router.navigate(['/app/cliente/perfil'], { queryParams: { tab: 'notificaciones' } });
     } else {
-      this.router.navigate(['/app/empleado/perfil']);
+      this.router.navigate(['/app/empleado/notificaciones']);
     }
   }
 }

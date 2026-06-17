@@ -17,7 +17,7 @@
     <p class="reputation-count">({{ empresa.total_calificaciones || 0 }} calificaciones)</p>
   </div>
 
-  <nav *ngIf="auth.isAdmin && hasAdminPermission">
+  <nav *ngIf="auth.isAdmin && auth.hasAdminPermission">
     <a routerLink="/app/admin/perfil" routerLinkActive="active">Mi perfil</a>
     <a routerLink="/app/admin/solicitudes" routerLinkActive="active">Solicitudes de auxilio</a>
     <a routerLink="/app/empleados" routerLinkActive="active">Empleados (Técnicos)</a>
@@ -32,9 +32,12 @@
     <a routerLink="/app/taller/configuracion" routerLinkActive="active">Configuración</a>
   </nav>
 
-  <nav *ngIf="!auth.isClient && !auth.isAdmin">
-    <a routerLink="/app/empleado/perfil" routerLinkActive="active">Mi perfil</a>
-    <a routerLink="/app/empleado/asignaciones" routerLinkActive="active">Mis asignaciones</a>
+  <nav *ngIf="isEmpleadoTecnico">
+    <a routerLink="/app/empleado/perfil" routerLinkActive="active">Mi Perfil</a>
+    <a routerLink="/app/empleado/asignaciones/asignadas" routerLinkActive="active">Solicitudes Asignadas</a>
+    <a routerLink="/app/empleado/asignaciones/curso" routerLinkActive="active">Servicio en Curso</a>
+    <a routerLink="/app/empleado/asignaciones/historial" routerLinkActive="active">Historial</a>
+    <a routerLink="/app/taller/ubicacion" routerLinkActive="active">Ubicación del Taller</a>
   </nav>
 
   <nav *ngIf="auth.isClient">

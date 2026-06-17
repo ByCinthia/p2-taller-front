@@ -1,0 +1,55 @@
+<section class="card page-block">
+  <header class="head">
+    <div>
+      <h2>{{ tituloHeader }}</h2>
+      <p class="muted">{{ descripcionHeader }}</p>
+    </div>
+    <button class="btn btn-ghost" (click)="cargarDatos()">Refrescar</button>
+  </header>
+
+  <div class="inner">
+    <div *ngIf="loading" class="loading-state">
+      <p>Cargando información...</p>
+    </div>
+
+    <div *ngIf="errorMsg" class="error-state">
+      <p class="error">{{ errorMsg }}</p>
+      <button class="btn btn-primary" (click)="cargarDatos()">Reintentar</button>
+    </div>
+
+    <div *ngIf="!loading && !errorMsg && asignacionesFiltradas.length === 0" class="empty-state">
+      <i class="bi bi-inbox"></i>
+      <h3>No hay solicitudes</h3>
+      <p class="muted">Actualmente no tienes solicitudes en esta categoría.</p>
+    </div>
+
+    <table class="table" *ngIf="!loading && !errorMsg && asignacionesFiltradas.length > 0">
+      <thead>
+        <tr>
+          <th>Fecha</th>
+          <th>Tipo</th>
+          <th>Servicio</th>
+          <th>Estado Incidente</th>
+          <th>Estado Asignación</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of asignacionesFiltradas">
+          <td>{{ item.fecha_asignacion | date:'dd/MM/yyyy HH:mm' }}</td>
+          <td>{{ item.incidente_tipo || 'General' }}</td>
+          <td>{{ item.servicio_nombre || 'N/A' }}</td>
+          <td>
+            <span class="badge" [ngClass]="item.incidente_estado">{{ item.incidente_estado | titlecase }}</span>
+          </td>
+          <td>
+            <span class="badge" [ngClass]="item.estado_tarea">{{ item.estado_tarea | titlecase }}</span>
+          </td>
+          <td>
+            <button class="btn btn-primary btn-sm" (click)="verDetalle(item)">Ver Detalle</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
