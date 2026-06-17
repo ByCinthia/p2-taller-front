@@ -1,9 +1,9 @@
 <div class="container">
   <header class="header">
-    <h2 *ngIf="isEmpleadoView">Solicitudes asignadas</h2>
+    <h2 *ngIf="isEmpleadoView">Mis asignaciones</h2>
     <h2 *ngIf="isAdminView">Gestión de Incidentes</h2>
     <h2 *ngIf="isClientView">Mis Incidentes</h2>
-    <p class="subtitle" *ngIf="isEmpleadoView">Aquí ves solo las solicitudes que te asignaron</p>
+    <p class="subtitle" *ngIf="isEmpleadoView">La lista se separa entre solicitudes activas y solicitudes ya atendidas.</p>
     <p class="subtitle" *ngIf="isAdminView">Asigna técnicos a solicitudes pendientes</p>
     <p class="subtitle" *ngIf="isClientView">Registros de tus solicitudes de auxilio</p>
   </header>

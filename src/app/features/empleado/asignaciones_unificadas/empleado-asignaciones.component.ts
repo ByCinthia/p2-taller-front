@@ -41,7 +41,7 @@ export class EmpleadoAsignacionesComponent implements OnInit {
   get tituloHeader(): string {
     if (this.tipoFiltro === 'curso') return 'Servicios en Curso';
     if (this.tipoFiltro === 'historial') return 'Historial de Servicios';
-    return 'Solicitudes Asignadas';
+    return 'Mis asignaciones';
   }
 
   get descripcionHeader(): string {

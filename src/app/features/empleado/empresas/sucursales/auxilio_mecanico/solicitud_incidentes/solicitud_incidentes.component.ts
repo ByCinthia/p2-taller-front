@@ -110,7 +110,7 @@ export class IncidentesComponent implements OnInit {
 
   get incidentsSectionTitle(): string {
     if (this.isEmpleadoView) {
-      return 'Solicitudes asignadas';
+      return 'Mis asignaciones';
     }
     if (this.auth.isClient) {
       return 'Mis solicitudes';
@@ -134,7 +134,7 @@ export class IncidentesComponent implements OnInit {
 
   get emptyMessage(): string {
     if (this.isEmpleadoView) {
-      return 'No tienes solicitudes asignadas';
+      return 'No tienes solicitudes activas.';
     }
     if (this.isClientView) {
       return 'No tienes incidentes registrados';
