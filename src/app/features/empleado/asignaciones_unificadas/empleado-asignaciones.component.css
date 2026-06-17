@@ -15,3 +15,58 @@
   border-bottom: 1px solid #eee;
   text-align: left;
 }
+
+/* Botones de acción */
+.acciones-cell {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.btn-sm {
+  padding: 0.3rem 0.7rem;
+  font-size: 0.8rem;
+  border-radius: 4px;
+  cursor: pointer;
+  border: none;
+  font-weight: 600;
+  transition: opacity 0.15s, transform 0.1s;
+}
+.btn-sm:hover:not(:disabled) {
+  opacity: 0.85;
+  transform: translateY(-1px);
+}
+.btn-sm:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.btn-success {
+  background-color: #198754;
+  color: #fff;
+}
+.btn-danger {
+  background-color: #dc3545;
+  color: #fff;
+}
+
+/* Fila de feedback */
+.feedback-row td {
+  padding: 0.25rem 0.75rem 0.5rem;
+  border-bottom: 1px solid #eee;
+}
+.accion-msg {
+  font-size: 0.82rem;
+  font-weight: 500;
+  padding: 0.25rem 0.6rem;
+  border-radius: 4px;
+}
+.accion-exito {
+  color: #0a5e2e;
+  background-color: #d1fae5;
+}
+.accion-error {
+  color: #7f1d1d;
+  background-color: #fee2e2;
+}

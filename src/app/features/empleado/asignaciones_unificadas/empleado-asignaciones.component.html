@@ -4,7 +4,7 @@
       <h2>{{ tituloHeader }}</h2>
       <p class="muted">{{ descripcionHeader }}</p>
     </div>
-    <button class="btn btn-ghost" (click)="cargarDatos()">Refrescar</button>
+    <button class="btn btn-ghost" (click)="cargarDatos(true)">Refrescar</button>
   </header>
 
   <div class="inner">
@@ -13,9 +13,11 @@
     </div>
 
     <div *ngIf="errorMsg" class="error-state">
+      <i class="bi bi-wifi-off" style="font-size:2rem;color:#dc3545"></i>
       <p class="error">{{ errorMsg }}</p>
-      <button class="btn btn-primary" (click)="cargarDatos()">Reintentar</button>
+      <button class="btn btn-primary" (click)="cargarDatos(true)">Reintentar</button>
     </div>
+
 
     <div *ngIf="!loading && !errorMsg && asignacionesFiltradas.length === 0" class="empty-state">
       <i class="bi bi-inbox"></i>
@@ -35,20 +37,64 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let item of asignacionesFiltradas">
-          <td>{{ item.fecha_asignacion | date:'dd/MM/yyyy HH:mm' }}</td>
-          <td>{{ item.incidente_tipo || 'General' }}</td>
-          <td>{{ item.servicio_nombre || 'N/A' }}</td>
-          <td>
-            <span class="badge" [ngClass]="item.incidente_estado">{{ item.incidente_estado | titlecase }}</span>
-          </td>
-          <td>
-            <span class="badge" [ngClass]="item.estado_tarea">{{ item.estado_tarea | titlecase }}</span>
-          </td>
-          <td>
-            <button class="btn btn-primary btn-sm" (click)="verDetalle(item)">Ver Detalle</button>
-          </td>
-        </tr>
+        <ng-container *ngFor="let item of asignacionesFiltradas">
+          <tr>
+            <td>{{ item.fecha_asignacion | date:'dd/MM/yyyy HH:mm' }}</td>
+            <td>{{ item.incidente_tipo || 'General' }}</td>
+            <td>{{ item.servicio_nombre || 'N/A' }}</td>
+            <td>
+              <span class="badge" [ngClass]="item.incidente_estado">{{ item.incidente_estado | titlecase }}</span>
+            </td>
+            <td>
+              <span class="badge" [ngClass]="item.estado_tarea">{{ item.estado_tarea | titlecase }}</span>
+            </td>
+            <td class="acciones-cell">
+              <!-- Botones Aceptar / Rechazar: solo si la asignación está pendiente -->
+              <ng-container *ngIf="esPendienteAceptar(item)">
+                <button
+                  class="btn btn-success btn-sm"
+                  id="btn-aceptar-{{ item.incidente_id }}"
+                  [disabled]="procesando.has(item.incidente_id)"
+                  (click)="aceptar(item)"
+                >
+                  <span *ngIf="procesando.has(item.incidente_id)">...</span>
+                  <span *ngIf="!procesando.has(item.incidente_id)">✓ Aceptar</span>
+                </button>
+                <button
+                  class="btn btn-danger btn-sm"
+                  id="btn-rechazar-{{ item.incidente_id }}"
+                  [disabled]="procesando.has(item.incidente_id)"
+                  (click)="rechazar(item)"
+                >
+                  <span *ngIf="procesando.has(item.incidente_id)">...</span>
+                  <span *ngIf="!procesando.has(item.incidente_id)">✗ Rechazar</span>
+                </button>
+              </ng-container>
+
+              <!-- Ver Detalle siempre visible -->
+              <button
+                class="btn btn-primary btn-sm"
+                id="btn-detalle-{{ item.incidente_id }}"
+                (click)="verDetalle(item)"
+              >
+                Ver Detalle
+              </button>
+            </td>
+          </tr>
+
+          <!-- Fila de feedback (éxito o error) -->
+          <tr *ngIf="mensajeExito[item.incidente_id] || mensajeError[item.incidente_id]"
+              class="feedback-row">
+            <td colspan="6">
+              <span *ngIf="mensajeExito[item.incidente_id]" class="accion-msg accion-exito">
+                {{ mensajeExito[item.incidente_id] }}
+              </span>
+              <span *ngIf="mensajeError[item.incidente_id]" class="accion-msg accion-error">
+                {{ mensajeError[item.incidente_id] }}
+              </span>
+            </td>
+          </tr>
+        </ng-container>
       </tbody>
     </table>
   </div>
