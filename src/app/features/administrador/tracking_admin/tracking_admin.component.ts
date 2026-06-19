@@ -48,19 +48,19 @@ import {
   </div>
 
   <!-- Loading -->
-  <div class="state-box" *ngIf="cargando && !tracking">
+  <div class="state-box" *ngIf="cargando">
     <div class="spinner"></div>
     <p>Cargando información de tracking...</p>
   </div>
 
-  <!-- Error -->
-  <div class="state-box error-box" *ngIf="!cargando && error">
+  <!-- Error (solo si no hay WS activo) -->
+  <div class="state-box error-box" *ngIf="!cargando && error && !wsConectado">
     <p class="error-text">{{ error }}</p>
     <button class="btn-back" (click)="volver()">Regresar</button>
   </div>
 
   <!-- Main content -->
-  <div class="tracking-content" *ngIf="tracking && !error">
+  <div class="tracking-content" *ngIf="tracking && !cargando">
 
     <!-- Info cards row -->
     <div class="info-row">
@@ -200,30 +200,30 @@ import {
 
     .btn-back {
       display: flex; align-items: center; gap: 6px;
-      background: rgba(255,255,255,0.08);
-      border: 1px solid rgba(255,255,255,0.15);
-      color: var(--text, #e2e8f0);
+      background: var(--surface, #ffffff);
+      border: 1px solid var(--line, #d5dde5);
+      color: var(--text, #10212f);
       padding: 9px 16px;
       border-radius: 12px;
       cursor: pointer;
       font-size: 0.9rem;
       font-weight: 600;
-      transition: background 0.2s;
+      transition: background 0.2s, border-color 0.2s;
       white-space: nowrap;
     }
-    .btn-back:hover { background: rgba(255,255,255,0.14); }
+    .btn-back:hover { background: var(--surface-2, #e9eef2); border-color: rgba(0,0,0,0.15); }
 
     .page-title {
       margin: 0 0 4px;
       font-size: 1.6rem;
       font-weight: 700;
-      color: var(--text, #e2e8f0);
+      color: var(--text, #10212f);
       letter-spacing: -0.3px;
     }
     .page-subtitle {
       margin: 0;
-      font-size: 0.88rem;
-      color: var(--muted, #94a3b8);
+      font-size: 1rem;
+      color: var(--muted, #506070);
       display: flex;
       align-items: center;
       gap: 8px;
@@ -233,50 +233,50 @@ import {
       display: flex;
       align-items: center;
       gap: 7px;
-      font-size: 0.82rem;
+      font-size: 0.95rem;
       font-weight: 600;
-      color: var(--muted, #94a3b8);
-      background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.1);
+      color: var(--muted, #506070);
+      background: rgba(255,255,255,0.45);
+      border: 1px solid rgba(255, 255, 255, 0.6);
       padding: 6px 12px;
       border-radius: 20px;
     }
     .ws-dot {
       width: 8px; height: 8px;
       border-radius: 50%;
-      background: #475569;
+      background: #94a3b8;
       transition: background 0.3s;
     }
-    .ws-indicator.connected { color: #4ade80; border-color: rgba(74,222,128,0.25); background: rgba(74,222,128,0.07); }
-    .ws-indicator.connected .ws-dot { background: #4ade80; box-shadow: 0 0 6px #4ade80; animation: pulse-ws 1.5s infinite; }
+    .ws-indicator.connected { color: #0f7b6c; border-color: rgba(15, 123, 108, 0.2); background: rgba(15, 123, 108, 0.08); }
+    .ws-indicator.connected .ws-dot { background: #10b981; box-shadow: 0 0 6px rgba(16,185,129,0.5); animation: pulse-ws 1.5s infinite; }
     @keyframes pulse-ws { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
 
     .btn-refresh {
-      background: rgba(12, 123, 147, 0.15);
-      border: 1px solid rgba(12, 123, 147, 0.3);
-      color: #38bdf8;
+      background: rgba(12, 123, 147, 0.1);
+      border: 1px solid rgba(12, 123, 147, 0.25);
+      color: var(--brand, #0c7b93);
       padding: 8px 16px;
       border-radius: 12px;
       cursor: pointer;
-      font-size: 0.88rem;
+      font-size: 1rem;
       font-weight: 600;
       transition: background 0.2s;
     }
-    .btn-refresh:hover:not(:disabled) { background: rgba(12, 123, 147, 0.25); }
+    .btn-refresh:hover:not(:disabled) { background: rgba(12, 123, 147, 0.18); }
     .btn-refresh:disabled { opacity: 0.4; cursor: default; }
 
     /* ── State boxes ── */
     .state-box {
       display: flex; flex-direction: column; align-items: center;
       gap: 16px; padding: 80px 24px;
-      color: var(--muted, #94a3b8);
+      color: var(--muted, #506070);
     }
-    .error-box { color: #f87171; }
+    .error-box { color: var(--danger, #b42318); }
     .error-text { font-size: 1rem; text-align: center; }
     .spinner {
       width: 44px; height: 44px;
-      border: 4px solid rgba(255,255,255,0.1);
-      border-top-color: #38bdf8;
+      border: 4px solid var(--line, #d5dde5);
+      border-top-color: var(--brand, #0c7b93);
       border-radius: 50%;
       animation: spin 0.8s linear infinite;
     }
@@ -293,31 +293,34 @@ import {
 
     /* ── Glass card ── */
     .glass-card {
-      background: rgba(255, 255, 255, 0.05);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.45);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.6);
       border-radius: 20px;
       overflow: hidden;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05);
       transition: box-shadow 0.2s, transform 0.2s;
     }
-    .glass-card:hover { box-shadow: 0 12px 40px rgba(0,0,0,0.28); transform: translateY(-2px); }
+    .glass-card:hover {
+      box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.08);
+      transform: translateY(-2px);
+    }
 
     .card-header {
       padding: 14px 18px;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.4);
     }
-    .accent-blue  { background: rgba(12, 123, 147, 0.12); }
-    .accent-cyan  { background: rgba(56, 189, 248, 0.1); }
-    .accent-green { background: rgba(74, 222, 128, 0.08); }
+    .accent-blue  { background: rgba(12, 123, 147, 0.08); }
+    .accent-cyan  { background: rgba(15, 123, 108, 0.06); }
+    .accent-green { background: rgba(34, 197, 94, 0.08); }
 
     .card-label {
-      font-size: 0.78rem;
+      font-size: 0.9rem;
       font-weight: 700;
       letter-spacing: 0.06em;
       text-transform: uppercase;
-      color: #94a3b8;
+      color: var(--brand-2, #144f6a);
     }
 
     .card-body {
@@ -334,41 +337,41 @@ import {
       gap: 12px;
     }
     .data-label {
-      font-size: 0.8rem;
-      color: #64748b;
+      font-size: 0.95rem;
+      color: var(--muted, #506070);
       white-space: nowrap;
       flex-shrink: 0;
     }
     .data-value {
-      font-size: 0.88rem;
-      color: #e2e8f0;
+      font-size: 1.05rem;
+      color: var(--text, #10212f);
       font-weight: 600;
       text-align: right;
       word-break: break-word;
     }
-    .data-value.desc { font-size: 0.84rem; font-weight: 400; color: #94a3b8; }
-    .data-value.coords { font-family: 'Courier New', monospace; font-size: 0.8rem; }
-    .data-value.muted { color: #64748b; font-weight: 400; }
-    .data-value.highlight { color: #38bdf8; font-size: 1rem; }
+    .data-value.desc { font-size: 1rem; font-weight: 400; color: #506070; }
+    .data-value.coords { font-family: 'Courier New', monospace; font-size: 0.9rem; }
+    .data-value.muted { color: #506070; font-weight: 400; font-style: italic; }
+    .data-value.highlight { color: var(--brand, #0c7b93); font-size: 1.2rem; font-weight: 700; }
 
     /* ── Estado badge ── */
     .badge-estado {
       display: inline-block;
-      padding: 2px 10px;
+      padding: 4px 12px;
       border-radius: 10px;
-      font-size: 0.75rem;
+      font-size: 0.88rem;
       font-weight: 700;
       letter-spacing: 0.03em;
       border: 1px solid;
     }
-    .estado-pendiente  { background: rgba(250,204,21,0.12);  color: #fbbf24; border-color: rgba(251,191,36,0.3); }
-    .estado-aceptada   { background: rgba(56,189,248,0.1);   color: #38bdf8; border-color: rgba(56,189,248,0.3); }
-    .estado-asignada   { background: rgba(139,92,246,0.1);   color: #a78bfa; border-color: rgba(139,92,246,0.3); }
-    .estado-en_camino  { background: rgba(251,146,60,0.12);  color: #fb923c; border-color: rgba(251,146,60,0.3); }
-    .estado-en_sitio   { background: rgba(52,211,153,0.1);   color: #34d399; border-color: rgba(52,211,153,0.3); }
+    .estado-pendiente  { background: rgba(250,204,21,0.12);  color: #b45309; border-color: rgba(251,191,36,0.3); }
+    .estado-aceptada   { background: rgba(12,123,147,0.12);   color: #0c7b93; border-color: rgba(12,123,147,0.2); }
+    .estado-asignada   { background: rgba(139,92,246,0.1);   color: #6d28d9; border-color: rgba(139,92,246,0.3); }
+    .estado-en_camino  { background: rgba(251,146,60,0.12);  color: #c2410c; border-color: rgba(251,146,60,0.3); }
+    .estado-en_sitio   { background: rgba(15,123,108,0.12);   color: #0f7b6c; border-color: rgba(15,123,108,0.2); }
     .estado-atendido,
-    .estado-completada { background: rgba(74,222,128,0.1);   color: #4ade80; border-color: rgba(74,222,128,0.3); }
-    .estado-cancelada  { background: rgba(248,113,113,0.1);  color: #f87171; border-color: rgba(248,113,113,0.3); }
+    .estado-completada { background: rgba(34,197,94,0.12);   color: #166534; border-color: rgba(34,197,94,0.2); }
+    .estado-cancelada  { background: rgba(248,113,113,0.1);  color: #b42318; border-color: rgba(248,113,113,0.3); }
 
     /* ── Etapa visual timeline ── */
     .etapa-visual {
@@ -388,24 +391,24 @@ import {
     .etapa-dot {
       width: 12px; height: 12px;
       border-radius: 50%;
-      border: 2px solid #475569;
-      background: #1e293b;
+      border: 2px solid var(--line, #d5dde5);
+      background: #ffffff;
       transition: all 0.3s;
     }
     .etapa-name {
-      font-size: 0.68rem;
-      color: #64748b;
+      font-size: 0.82rem;
+      color: var(--muted, #506070);
       white-space: nowrap;
       font-weight: 500;
     }
-    .etapa-step.active .etapa-dot { border-color: #38bdf8; background: #38bdf8; box-shadow: 0 0 8px rgba(56,189,248,0.5); }
-    .etapa-step.active .etapa-name { color: #38bdf8; font-weight: 700; }
-    .etapa-step.done .etapa-dot { border-color: #4ade80; background: #4ade80; }
-    .etapa-step.done .etapa-name { color: #4ade80; }
+    .etapa-step.active .etapa-dot { border-color: var(--brand, #0c7b93); background: var(--brand, #0c7b93); box-shadow: 0 0 8px rgba(12,123,147,0.4); }
+    .etapa-step.active .etapa-name { color: var(--brand, #0c7b93); font-weight: 700; }
+    .etapa-step.done .etapa-dot { border-color: var(--ok, #0f7b6c); background: var(--ok, #0f7b6c); }
+    .etapa-step.done .etapa-name { color: var(--ok, #0f7b6c); }
     .etapa-line {
       flex: 1;
       height: 2px;
-      background: #334155;
+      background: var(--line, #d5dde5);
       min-width: 12px;
       max-width: 32px;
       margin-bottom: 16px;
@@ -413,29 +416,37 @@ import {
 
     /* ── Map section ── */
     .map-section {
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.45);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      border-radius: 24px;
       overflow: hidden;
+      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05);
+      transition: box-shadow 0.2s;
+    }
+    .map-section:hover {
+      box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.08);
     }
     .map-header {
       display: flex;
       align-items: center;
       gap: 12px;
       padding: 14px 18px;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.4);
     }
-    .map-header .muted { color: #64748b; font-size: 0.84rem; }
+    .map-header .muted { color: var(--muted, #506070); font-size: 1rem; font-style: italic; }
     .pulse-dot {
       width: 10px; height: 10px;
       border-radius: 50%;
-      background: #4ade80;
-      box-shadow: 0 0 8px #4ade80;
+      background: #10b981;
+      box-shadow: 0 0 8px rgba(16,185,129,0.6);
       animation: pulse-ws 1.2s infinite;
     }
     .map-canvas {
       width: 100%;
       height: 460px;
+      z-index: 1;
     }
 
     @media (max-width: 768px) {
@@ -470,7 +481,7 @@ export class TrackingAdminComponent implements OnInit, AfterViewInit, OnDestroy 
     private route: ActivatedRoute,
     private router: Router,
     private api: IncidenteApiService,
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.incidenteId = this.route.snapshot.paramMap.get('id') ?? '';
@@ -499,7 +510,13 @@ export class TrackingAdminComponent implements OnInit, AfterViewInit, OnDestroy 
   private cargarDatos(): void {
     this.cargando = true;
 
-    // Cargar tracking (contiene toda la info necesaria)
+    // Cargar datos básicos del incidente en paralelo (opcional)
+    this.api.get(this.incidenteId).subscribe({
+      next: (inc) => { this.incidente = inc; },
+      error: () => { /* datos básicos opcionales */ },
+    });
+
+    // Cargar tracking inicial (contiene toda la info necesaria)
     this.api.getTracking(this.incidenteId).subscribe({
       next: (t) => {
         this.tracking = t;
@@ -508,18 +525,22 @@ export class TrackingAdminComponent implements OnInit, AfterViewInit, OnDestroy 
           this.initMap();
           this.actualizarMapa();
         }, 0);
+        // WS se conecta siempre, independientemente del HTTP
         this.conectarWS();
       },
       error: () => {
-        this.error = 'No se pudo cargar la información de tracking del incidente.';
-        this.cargando = false;
+        // Si el HTTP falla, NO bloqueamos la pantalla: el WS puede
+        // traer datos. Creamos un tracking vacío para que el template
+        // muestre el mapa y el WS lo rellene cuando lleguen mensajes.
+        console.warn('[TRACKING ADMIN] HTTP tracking falló, esperando datos del WS...');
+        this.tracking = {
+          incidente_id: this.incidenteId,
+          estado: '',
+        } as any;
+        this.error = null;          // limpiar error; el WS podría funcionar
+        // cargando queda en true hasta que llegue el primer mensaje WS válido
+        this.conectarWS();
       },
-    });
-
-    // Cargar datos básicos del incidente en paralelo
-    this.api.get(this.incidenteId).subscribe({
-      next: (inc) => { this.incidente = inc; },
-      error: () => { /* datos básicos opcionales */ },
     });
   }
 
@@ -541,8 +562,8 @@ export class TrackingAdminComponent implements OnInit, AfterViewInit, OnDestroy 
     this.L = leaflet;
     this.L.Icon.Default.mergeOptions({
       iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-      iconUrl:       'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-      shadowUrl:     'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+      iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+      shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
     });
   }
 
@@ -655,11 +676,88 @@ export class TrackingAdminComponent implements OnInit, AfterViewInit, OnDestroy 
     this.ws.onmessage = (event) => {
       try {
         const msg = JSON.parse(event.data);
-        console.log('[TRACKING ADMIN] mensaje WS:', msg);
-        if (msg?.tracking) {
-          this.tracking = { ...this.tracking, ...msg.tracking } as IncidenteTrackingDto;
-          this.actualizarMapa();
+        console.log('[TRACKING ADMIN] mensaje WS raw:', msg);
+
+        // ── Normalizar payload ───────────────────────────────────────────
+        // El backend puede emitir varias formas:
+        //   1) { event: 'technician_location_updated', data: { latitud, longitud, ... } }
+        //   2) { tracking: { tecnico_latitud, tecnico_longitud, ... } }   (legacy)
+        //   3) { event: 'tracking_update', data: { ... } }
+
+        let lat: number | null = null;
+        let lng: number | null = null;
+        let clientLat: number | null = null;
+        let clientLng: number | null = null;
+        let payload: any = null;
+
+        if (msg?.event === 'technician_location_updated' && msg?.data) {
+          // Forma 1: evento explícito con data plana
+          const d = msg.data;
+          lat = d.latitud ?? d.tecnico_latitud ?? null;
+          lng = d.longitud ?? d.tecnico_longitud ?? null;
+          clientLat = d.latitud_incidente ?? d.cliente_latitud ?? null;
+          clientLng = d.longitud_incidente ?? d.cliente_longitud ?? null;
+          payload = d;
+
+          if (lat != null && lng != null) {
+            this.tracking = {
+              ...this.tracking,
+              tecnico_latitud: lat,
+              tecnico_longitud: lng,
+              tecnico_nombre: d.tecnico_nombre ?? this.tracking?.tecnico_nombre,
+              tecnico_ubicacion_actualizada_en: d.actualizado_en ?? new Date().toISOString(),
+              ...(clientLat != null ? { latitud_incidente: clientLat } : {}),
+              ...(clientLng != null ? { longitud_incidente: clientLng } : {}),
+              ...(d.estado != null ? { estado: d.estado } : {}),
+              ...(d.distancia_km != null ? { distancia_km: d.distancia_km } : {}),
+              ...(d.eta_minutos != null ? { eta_minutos: d.eta_minutos } : {}),
+            } as IncidenteTrackingDto;
+          }
+        } else if (msg?.event && msg?.data) {
+          // Forma 3: otro evento genérico con data
+          const d = msg.data;
+          lat = d.tecnico_latitud ?? d.latitud ?? null;
+          lng = d.tecnico_longitud ?? d.longitud ?? null;
+          payload = d;
+          if (lat != null && lng != null) {
+            this.tracking = { ...this.tracking, tecnico_latitud: lat, tecnico_longitud: lng } as IncidenteTrackingDto;
+          }
+        } else if (msg?.tracking) {
+          // Forma 2: legacy { tracking: { ... } }
+          payload = msg.tracking;
+          lat = payload.tecnico_latitud ?? null;
+          lng = payload.tecnico_longitud ?? null;
+          this.tracking = { ...this.tracking, ...payload } as IncidenteTrackingDto;
         }
+
+        console.log('[TRACKING ADMIN] tracking payload normalizado', payload);
+        console.log('[TRACKING ADMIN] lat tecnico', lat);
+        console.log('[TRACKING ADMIN] lng tecnico', lng);
+
+        // ── Si tenemos coordenadas válidas del técnico ───────────────────
+        if (lat != null && lng != null) {
+          // Dejar de mostrar loading en el primer mensaje válido
+          if (this.cargando) {
+            this.cargando = false;
+            // Asegurar que el mapa esté inicializado antes de actualizar
+            setTimeout(() => {
+              this.initMap();
+              this.actualizarMapa();
+            }, 0);
+          } else {
+            this.actualizarMapa();
+          }
+        } else if (payload != null) {
+          // Llegó un mensaje válido aunque sin coordenadas útiles
+          if (this.cargando) {
+            this.cargando = false;
+            setTimeout(() => { this.initMap(); this.actualizarMapa(); }, 0);
+          } else {
+            this.actualizarMapa();
+          }
+        }
+
+        console.log('[TRACKING ADMIN] loading final', this.cargando);
       } catch (e) {
         console.error('[TRACKING ADMIN] Error parseando WS:', e);
       }
@@ -699,11 +797,11 @@ export class TrackingAdminComponent implements OnInit, AfterViewInit, OnDestroy 
   estadoLabel(estado: string | undefined): string {
     const mapa: Record<string, string> = {
       pendiente: 'Pendiente',
-      aceptada:  'Aceptada',
-      asignada:  'Asignada',
+      aceptada: 'Aceptada',
+      asignada: 'Asignada',
       en_camino: 'Técnico en camino',
-      en_sitio:  'Técnico en sitio',
-      atendido:  'Finalizado',
+      en_sitio: 'Técnico en sitio',
+      atendido: 'Finalizado',
       completada: 'Completada',
       cancelada: 'Cancelada',
     };

@@ -65,13 +65,13 @@ export class EmpleadoAsignacionesComponent implements OnInit {
 
   get tituloHeader(): string {
     if (this.tipoFiltro === 'curso') return 'Servicios en Curso';
-    if (this.tipoFiltro === 'historial') return 'Historial de Servicios';
+    if (this.tipoFiltro === 'historial') return 'Historial de servicios finalizados';
     return 'Mis asignaciones';
   }
 
   get descripcionHeader(): string {
     if (this.tipoFiltro === 'curso') return 'Solicitudes que estás atendiendo actualmente.';
-    if (this.tipoFiltro === 'historial') return 'Registro de solicitudes pasadas.';
+    if (this.tipoFiltro === 'historial') return 'Servicios completados o cancelados';
     return 'Nuevas solicitudes pendientes de atención.';
   }
 
@@ -136,23 +136,33 @@ export class EmpleadoAsignacionesComponent implements OnInit {
       const estadoIncidente = (item.incidente_estado || '').toLowerCase();
       const estadoTarea = (item.estado_tarea || '').toLowerCase();
 
-      if (this.tipoFiltro === 'curso') {
-        return ['aceptada', 'en_camino', 'en_proceso', 'en_sitio'].includes(estadoTarea) ||
-               ['en_proceso'].includes(estadoIncidente);
-      } else if (this.tipoFiltro === 'historial') {
-        return ['finalizada', 'completada', 'cancelada', 'rechazada'].includes(estadoTarea) ||
-               ['finalizado', 'cancelado'].includes(estadoIncidente) ||
-               ['atendido', 'cerrado'].includes(estadoTarea);
-      } else {
-        // Por defecto 'asignadas'
-        const isHistorial = ['finalizada', 'completada', 'cancelada', 'rechazada', 'atendido', 'cerrado'].includes(estadoTarea) ||
-                            ['finalizado', 'cancelado'].includes(estadoIncidente);
-        const isCurso = ['aceptada', 'en_camino', 'en_proceso', 'en_sitio'].includes(estadoTarea) ||
-                        ['en_proceso'].includes(estadoIncidente);
+      const activeStates = ['aceptada', 'asignada', 'pendiente', 'en_camino', 'en_proceso', 'en_sitio'];
+      const finalStates = ['finalizado', 'finalizada', 'atendido', 'atendida', 'completado', 'completada', 'cancelado', 'cancelada', 'rechazada'];
 
-        return !isHistorial && !isCurso;
+      const esTareaActiva = activeStates.includes(estadoTarea);
+      const esTareaFinal = finalStates.includes(estadoTarea);
+
+      const esHistorial = esTareaFinal && !esTareaActiva;
+
+      const esCurso = !esHistorial && ['aceptada', 'en_camino', 'en_proceso', 'en_sitio'].includes(estadoTarea);
+
+      if (this.tipoFiltro === 'curso') {
+        return esCurso;
+      } else if (this.tipoFiltro === 'historial') {
+        return esHistorial;
+      } else {
+        // Por defecto 'asignadas' (Mis asignaciones)
+        return ['asignada', 'pendiente'].includes(estadoTarea) && !esHistorial && !esCurso;
       }
     });
+  }
+
+  formatEta(minutos: number | null | undefined): string {
+    if (minutos == null || minutos === 0) return 'N/A';
+    if (minutos < 60) return `${minutos} min`;
+    const h = Math.floor(minutos / 60);
+    const m = minutos % 60;
+    return m === 0 ? `${h} h` : `${h} h ${m} min`;
   }
 
   /**
@@ -210,6 +220,13 @@ export class EmpleadoAsignacionesComponent implements OnInit {
             err?.error?.detail || 'Error al rechazar la solicitud. Intenta nuevamente.';
         }
       });
+  }
+
+  esEstadoFinalizado(item: MiAsignacionDto): boolean {
+    const tarea = (item.estado_tarea || '').toLowerCase();
+    const incidente = (item.incidente_estado || '').toLowerCase();
+    const estadosOcultar = ['finalizado', 'finalizada', 'atendido', 'atendida', 'cancelado', 'cancelada'];
+    return estadosOcultar.includes(tarea) || estadosOcultar.includes(incidente);
   }
 
   verDetalle(item: MiAsignacionDto): void {

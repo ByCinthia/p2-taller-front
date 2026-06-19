@@ -21,13 +21,14 @@
 
     <div *ngIf="!loading && !errorMsg && asignacionesFiltradas.length === 0" class="empty-state">
       <i class="bi bi-inbox"></i>
-      <h3>No hay solicitudes</h3>
-      <p class="muted">Actualmente no tienes solicitudes en esta categoría.</p>
+      <h3 *ngIf="tipoFiltro !== 'historial'">No hay solicitudes</h3>
+      <h3 *ngIf="tipoFiltro === 'historial'">Aún no tienes servicios finalizados.</h3>
+      <p class="muted" *ngIf="tipoFiltro !== 'historial'">Actualmente no tienes solicitudes en esta categoría.</p>
     </div>
 
     <table class="table" *ngIf="!loading && !errorMsg && asignacionesFiltradas.length > 0">
       <thead>
-        <tr>
+        <tr *ngIf="tipoFiltro !== 'historial'">
           <th>Fecha</th>
           <th>Tipo</th>
           <th>Servicio</th>
@@ -35,10 +36,17 @@
           <th>Estado Asignación</th>
           <th>Acciones</th>
         </tr>
+        <tr *ngIf="tipoFiltro === 'historial'">
+          <th>Fecha</th>
+          <th>Tipo</th>
+          <th>Servicio</th>
+          <th>Estado final</th>
+          <th>Duración/ETA</th>
+        </tr>
       </thead>
       <tbody>
         <ng-container *ngFor="let item of asignacionesFiltradas">
-          <tr>
+          <tr *ngIf="tipoFiltro !== 'historial'">
             <td>{{ item.fecha_asignacion | date:'dd/MM/yyyy HH:mm' }}</td>
             <td>{{ item.incidente_tipo || 'General' }}</td>
             <td>{{ item.servicio_nombre || 'N/A' }}</td>
@@ -71,8 +79,9 @@
                 </button>
               </ng-container>
 
-              <!-- Ver Detalle siempre visible -->
+              <!-- Ver Detalle visible solo si no está finalizado/atendido/cancelado -->
               <button
+                *ngIf="!esEstadoFinalizado(item)"
                 class="btn btn-primary btn-sm"
                 id="btn-detalle-{{ item.incidente_id }}"
                 (click)="verDetalle(item)"
@@ -82,10 +91,20 @@
             </td>
           </tr>
 
+          <tr *ngIf="tipoFiltro === 'historial'">
+            <td>{{ item.fecha_asignacion | date:'dd/MM/yyyy HH:mm' }}</td>
+            <td>{{ item.incidente_tipo || 'General' }}</td>
+            <td>{{ item.servicio_nombre || 'N/A' }}</td>
+            <td>
+              <span class="badge" [ngClass]="item.estado_tarea">{{ item.estado_tarea | titlecase }}</span>
+            </td>
+            <td>{{ formatEta(item.eta_minutos) }}</td>
+          </tr>
+
           <!-- Fila de feedback (éxito o error) -->
           <tr *ngIf="mensajeExito[item.incidente_id] || mensajeError[item.incidente_id]"
               class="feedback-row">
-            <td colspan="6">
+            <td [attr.colspan]="tipoFiltro === 'historial' ? 5 : 6">
               <span *ngIf="mensajeExito[item.incidente_id]" class="accion-msg accion-exito">
                 {{ mensajeExito[item.incidente_id] }}
               </span>

@@ -26,22 +26,33 @@ export class SidebarComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.isAdminView = !!this.auth.isAdmin;
-    this.isClientView = !!this.auth.isClient;
-    this.hasAdminPermission = !!this.auth.hasAdminPermission;
-    this.isEmpleadoView = !this.isClientView && !this.hasAdminPermission;
+    // Escuchar cambios en el token decodificado y permisos para reconstruir el menú reactivamente
+    this.auth.decodedToken$.subscribe(() => this.updateViewFlags());
+    this.auth.permissions$.subscribe(() => this.updateViewFlags());
 
-    if (!this.isClientView) {
-      // subscribe to empresa updates and request an initial refresh
-      this.empresaApi.empresa$.subscribe({ 
-        next: (d) => {
-          this.empresa = d;
-          this.cdr.detectChanges();
-        }, 
-        error: (err: any) => console.error(err) 
+    // Suscribirse a cambios de la empresa si no es cliente
+    this.empresaApi.empresa$.subscribe({ 
+      next: (d) => {
+        this.empresa = d;
+        this.cdr.detectChanges();
+      }, 
+      error: (err: any) => console.error(err) 
+    });
+
+    // Cargar/actualizar datos iniciales de la empresa si no es cliente
+    if (!this.auth.isClient) {
+      this.empresaApi.refreshMyEmpresa().subscribe({ 
+        error: (err: any) => console.error('Error cargando datos de la empresa:', err) 
       });
-      this.empresaApi.refreshMyEmpresa().subscribe({ error: (err: any) => console.error('Error cargando datos de la empresa:', err) });
     }
+  }
+
+  private updateViewFlags(): void {
+    this.isClientView = !!this.auth.isClient;
+    this.isEmpleadoView = !!this.auth.isEmpleadoTecnico;
+    this.isAdminView = !this.isClientView && !this.isEmpleadoView;
+    this.hasAdminPermission = !!this.auth.hasAdminPermission;
+    this.cdr.detectChanges();
   }
 
   getStarArray(rating: number | undefined): number[] {
@@ -54,3 +65,4 @@ export class SidebarComponent implements OnInit {
     this.auth.logout();
   }
 }
+

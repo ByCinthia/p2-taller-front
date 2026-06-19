@@ -168,14 +168,18 @@ export class AuthService {
   get isEmpleadoTecnico(): boolean {
     const user = this.currentUser;
     if (!user) return false;
-    return !this.isClient && !this.isAdmin && !this.hasAdminPermission;
+    const roleStr = String(user.role || '').toLowerCase();
+    const rolesArr = (user.roles || []).map((r: string) => String(r).toLowerCase());
+    return roleStr === 'empleado' || roleStr === 'tecnico' || rolesArr.includes('empleado') || rolesArr.includes('tecnico');
   }
 
   getDefaultAppRoute(): string {
     if (this.isClient) return '/app/cliente/perfil';
+    if (this.isEmpleadoTecnico) return '/app/empleado/perfil';
     if (this.isAdmin || this.hasAdminPermission) return '/app/empleados';
     return '/app/empleado/perfil';
   }
+
 
   async logout(): Promise<void> {
     try {

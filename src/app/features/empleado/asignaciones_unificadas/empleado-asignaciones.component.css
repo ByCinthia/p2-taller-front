@@ -6,14 +6,40 @@
   font-size: 3rem;
   color: #ccc;
 }
+.head {
+  padding: 1.5rem 2rem 0.5rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.head h2 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.head .muted {
+  margin: 0;
+  color: #6c757d;
+}
+
+.inner {
+  padding: 1rem 2rem;
+}
+
 .table {
   width: 100%;
   border-collapse: collapse;
+  margin-top: 1rem;
 }
 .table th, .table td {
-  padding: 0.75rem;
+  padding: 1.2rem 1.5rem;
   border-bottom: 1px solid #eee;
   text-align: left;
+  vertical-align: middle;
 }
 
 /* Botones de acción */

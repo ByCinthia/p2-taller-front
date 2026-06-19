@@ -582,10 +582,13 @@ export class DetalleServicioEmpleadoComponent implements OnInit, OnDestroy {
         if (this.asignacion) this.asignacion.estado_tarea = 'finalizado';
         this.etapaVisual = 'finalizada';
         sessionStorage.removeItem('etapa_visual_incidente_' + this.incidenteId!);
-        this.accionMensaje = 'Servicio finalizado correctamente.';
+        this.accionMensaje = 'Servicio finalizado correctamente. Redirigiendo al historial...';
         this.accionLoading = false;
         this.detenerTracking();
         this.empleadoApi.invalidarCacheAsignaciones();
+        setTimeout(() => {
+          this.router.navigate(['/app/empleado/asignaciones/historial']);
+        }, 1500);
       },
       error: (err) => {
         this.accionMensaje = err?.error?.detail || 'No se pudo finalizar el servicio.';

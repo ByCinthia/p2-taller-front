@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { finalize } from 'rxjs';
 import * as L from 'leaflet';
 import {
   DashboardApiService,
@@ -38,6 +39,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   loading = false;
   errorMsg = '';
   activeTab: 'resumen' | 'estados' | 'timeline' | 'talleres' | 'mapa' = 'resumen';
+  private loadCount = 0;
 
   private map?: L.Map;
   private markersGroup?: L.FeatureGroup;
@@ -45,10 +47,19 @@ export class DashboardComponent implements OnInit, OnDestroy {
   constructor(private readonly dashboardApi: DashboardApiService) {}
 
   ngOnInit(): void {
+    console.log('[Dashboard] ngOnInit ejecutado');
     this.load();
   }
 
   load(): void {
+    if (this.loading) {
+      console.log('[Dashboard] load() ignorado (ya en curso)');
+      return;
+    }
+
+    this.loadCount++;
+    console.log('[Dashboard] load() iniciado, count=', this.loadCount);
+
     this.loading = true;
     this.errorMsg = '';
 
@@ -56,28 +67,36 @@ export class DashboardComponent implements OnInit, OnDestroy {
     if (this.desde) f.desde = this.desde;
     if (this.hasta) f.hasta = this.hasta;
 
-    this.dashboardApi.getDashboard(f).subscribe({
-      next: (data) => {
-        this.resumen = data.resumen;
-        this.porEstado = data.por_estado || [];
-        this.serieTemporal = data.serie_temporal || [];
-        this.tiposIncidentes = data.tipos_incidentes || [];
-        this.zonasMasIncidentes = data.zonas_mas_incidentes || [];
-        this.talleresEficientes = data.talleres_eficientes || [];
-        this.mapaIncidentes = data.mapa_incidentes || [];
-        this.loading = false;
+    console.log('[Dashboard] filtros enviados:', f);
 
-        if (this.activeTab === 'mapa') {
-          setTimeout(() => {
-            this.initMap();
-          }, 50);
-        }
-      },
-      error: (err) => {
-        this.errorMsg = err?.error?.detail || 'Error al cargar el dashboard.';
-        this.loading = false;
-      },
-    });
+    this.dashboardApi.getDashboard(f)
+      .pipe(
+        finalize(() => {
+          this.loading = false;
+          console.log('[Dashboard] loading=false (finalize)');
+        })
+      )
+      .subscribe({
+        next: (data) => {
+          console.log('[Dashboard] respuesta recibida:', data);
+
+          this.resumen = data.resumen;
+          this.porEstado = data.por_estado || [];
+          this.serieTemporal = data.serie_temporal || [];
+          this.tiposIncidentes = data.tipos_incidentes || [];
+          this.zonasMasIncidentes = data.zonas_mas_incidentes || [];
+          this.talleresEficientes = data.talleres_eficientes || [];
+          this.mapaIncidentes = data.mapa_incidentes || [];
+
+          if (this.activeTab === 'mapa') {
+            setTimeout(() => this.initMap(), 50);
+          }
+        },
+        error: (err) => {
+          console.error('[Dashboard] error:', err);
+          this.errorMsg = err?.error?.detail || err?.message || 'Error al cargar el dashboard.';
+        },
+      });
   }
 
   setTab(tab: 'resumen' | 'estados' | 'timeline' | 'talleres' | 'mapa'): void {
