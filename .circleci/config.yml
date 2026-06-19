@@ -44,7 +44,7 @@ jobs:
               ${EC2_USER}@${EC2_IP} \
               "sudo mkdir -p /var/www/frontend && sudo rm -rf /var/www/frontend/* && sudo chown ${EC2_USER}:nginx /var/www/frontend"
             # Copiar archivos vía tar sobre SSH (no requiere rsync en el remoto)
-            tar -C dist/frontend/browser -cf - . | \
+            tar -C dist/frontend -cf - . | \
               ssh -o StrictHostKeyChecking=no \
                 ${EC2_USER}@${EC2_IP} \
                 "sudo tar -C /var/www/frontend -xf - && sudo chown -R nginx:nginx /var/www/frontend"
