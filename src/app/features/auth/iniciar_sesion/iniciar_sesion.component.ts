@@ -38,6 +38,7 @@ export class LoginComponent {
     this.auth.login(this.form.getRawValue()).subscribe({
       next: () => {
         this.loading = false;
+        console.log('[AUTH] Navegando a dashboard');
         this.router.navigate([this.auth.getDefaultAppRoute()]);
       },
       error: (error) => {

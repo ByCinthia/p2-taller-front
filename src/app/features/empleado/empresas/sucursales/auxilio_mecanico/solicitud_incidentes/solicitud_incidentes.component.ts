@@ -1,9 +1,10 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
+import { finalize } from 'rxjs/operators';
 import { FormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 
 import {
   IncidenteApiService,
@@ -69,6 +70,8 @@ export class IncidentesComponent implements OnInit {
     private clienteApi: ClienteApiService,
     private userManagementApi: UserManagementApiService,
     private readonly route: ActivatedRoute,
+    private readonly router: Router,
+    private cdr: ChangeDetectorRef,
   ) {}
 
   // --- Create incident (client) state
@@ -161,23 +164,35 @@ export class IncidentesComponent implements OnInit {
     console.log('[cargarIncidentes] isEmpleadoView:', this.isEmpleadoView, 'routeRoleView:', this.routeRoleView);
     if (this.isEmpleadoView) {
       console.log('[cargarIncidentes] Loading as EMPLEADO - calling getMyAsignaciones');
-      this.empleadoApi.getMyAsignaciones().subscribe({
+      this.empleadoApi.getMyAsignaciones().pipe(
+        finalize(() => {
+          this.loading = false;
+          this.cdr.detectChanges();
+        })
+      ).subscribe({
         next: (items) => {
           console.log('[cargarIncidentes] Received asignaciones:', items);
           this.assignedIncidents = items || [];
           this.incidents = this.assignedIncidents.map((item) => this.mapAsignacionToIncidente(item));
-          this.loading = false;
         },
         error: (err: any) => {
           console.error('[cargarIncidentes] Error loading asignaciones:', err);
           this.mostrarMensaje('Error al cargar tus asignaciones', 'error');
-          this.loading = false;
         },
       });
       return;
     }
 
-    this.api.list().subscribe({
+    this.api.list().pipe(
+      finalize(() => {
+        this.loading = false;
+        console.log('loading final:', this.loading);
+        console.log('incidentes total:', this.incidents.length);
+        console.log('solicitudes nuevas:', this.incidentsNuevas.length);
+        console.log('solicitudes atendidas:', this.incidentsAtendidas.length);
+        this.cdr.detectChanges();
+      })
+    ).subscribe({
       next: (data) => {
         console.log('[cargarIncidentes] Data received:', data?.length);
         if (this.isAdminView) {
@@ -193,15 +208,13 @@ export class IncidentesComponent implements OnInit {
             ].includes(inc.estado?.toLowerCase().trim() || ''),
           );
           this.incidentsAtendidas = (data || []).filter((inc) => ['atendido', 'cerrado', 'finalizado', 'completada', 'completado', 'cancelada', 'cancelado'].includes(inc.estado?.toLowerCase().trim() || ''));
-          this.incidents = data;
+          this.incidents = data || [];
         } else {
-          this.incidents = data;
+          this.incidents = data || [];
         }
-        this.loading = false;
       },
       error: (err: any) => {
         this.mostrarMensaje('Error al cargar incidentes', 'error');
-        this.loading = false;
       },
     });
   }
@@ -345,6 +358,7 @@ export class IncidentesComponent implements OnInit {
             this.ultimaUbicacionActualizada = new Date();
             this.mostrarMensaje('UbicaciÃ³n actualizada âœ“', 'success');
             this.updatingLocation = false;
+            this.empleadoApi.invalidarCacheAsignaciones();
           },
           error: () => {
             this.mostrarMensaje('Error al actualizar ubicaciÃ³n', 'error');
@@ -378,7 +392,7 @@ cargarTecnicosCercanos(incidente: IncidenteDto): void {
   this.cargandoTecnicos = true;
 
   // Llamamos a la nueva función del servicio que creamos antes
-  this.api.listTecnicosDisponibles().subscribe({
+  this.api.listTecnicosDisponibles(incidente.latitud, incidente.longitud).subscribe({
     next: (data) => {
         this.tecnicosCercanos = data || [];
       this.cargandoTecnicos = false;
@@ -468,8 +482,8 @@ cargarTecnicosCercanos(incidente: IncidenteDto): void {
   }
 
   verTracking(incidente: IncidenteDto): void {
-    // Navegar a la pantalla de tracking
-    window.location.href = `/tracking/${incidente.id}`;
+    // Navegar a la pantalla exclusiva de tracking admin
+    this.router.navigate(['/app/incidentes', incidente.id, 'tracking']);
   }
 
   getPriorityColor(prioridad?: number): string {
@@ -485,5 +499,22 @@ cargarTecnicosCercanos(incidente: IncidenteDto): void {
     setTimeout(() => {
       this.message = '';
     }, 3000);
+  }
+
+  formatEta(minutos: number | null | undefined): string {
+    if (minutos == null) return 'Sin ETA';
+    if (minutos < 60) return `${minutos} min`;
+
+    const horas = Math.floor(minutos / 60);
+    const mins = minutos % 60;
+
+    if (mins === 0) return `${horas} h`;
+    return `${horas} h ${mins} min`;
+  }
+
+  formatDistancia(km: number | null | undefined): string {
+    if (km == null) return 'Sin ubicación';
+    if (km < 1) return `${Math.round(km * 1000)} m`;
+    return `${km.toFixed(1)} km`;
   }
 }

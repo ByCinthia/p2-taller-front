@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
+import { Router } from '@angular/router';
 
 import { AuthService } from '../../services/auth/auth.service';
 import { EmpleadoApiService, MiAsignacionDto } from '../../services/empleado.service';
@@ -36,6 +37,7 @@ export class AsignacionesEmpleadoComponent implements OnInit {
     public readonly auth: AuthService,
     private readonly empleadoApi: EmpleadoApiService,
     private readonly incidenteApi: IncidenteApiService,
+    private readonly router: Router,
   ) {}
 
   ngOnInit(): void {
@@ -180,8 +182,8 @@ export class AsignacionesEmpleadoComponent implements OnInit {
     if (!this.detalleSolicitud) {
       return;
     }
-    // Navegar a la pantalla de tracking
-    window.location.href = `/tracking/${this.detalleSolicitud.id}`;
+    // Navegar a la pantalla exclusiva de tracking admin
+    this.router.navigate(['/app/incidentes', this.detalleSolicitud.id, 'tracking']);
   }
 
   esAtendida(asignacion: MiAsignacionDto): boolean {

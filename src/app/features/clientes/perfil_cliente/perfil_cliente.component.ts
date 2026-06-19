@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink, ActivatedRoute } from '@angular/router';
+import { RouterLink, ActivatedRoute, Router } from '@angular/router';
 import { DatePipe } from '@angular/common';
 
 import { AuthService } from '../../services/auth/auth.service';
@@ -71,6 +71,7 @@ export class ClientProfileComponent implements OnInit {
     private readonly incidenteApi: IncidenteApiService,
     private readonly notificationService: NotificationService,
     private readonly route: ActivatedRoute,
+    private readonly router: Router,
   ) {}
 
   ngOnInit(): void {
@@ -263,8 +264,8 @@ export class ClientProfileComponent implements OnInit {
   }
 
   verDetalleTracking(solicitud: any): void {
-    // Navegar a la página de tracking del incidente
-    window.location.href = `/app/incidentes/tracking/${solicitud.id}`;
+    // Navegar a la pantalla exclusiva de tracking admin
+    this.router.navigate(['/app/incidentes', solicitud.id, 'tracking']);
   }
 
   loadNotifications(): void {

@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 
 import { AuthService } from '../../services/auth/auth.service';
@@ -14,22 +14,34 @@ import { EmpresaApiService, EmpresaDto } from '../../servicios/empresas.api.serv
 })
 export class SidebarComponent implements OnInit {
   empresa: EmpresaDto | null = null;
+  isAdminView = false;
+  isEmpleadoView = false;
+  isClientView = false;
+  hasAdminPermission = false;
 
   constructor(
     public readonly auth: AuthService,
-    private readonly empresaApi: EmpresaApiService
+    private readonly empresaApi: EmpresaApiService,
+    private readonly cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
-    if (!this.auth.isClient) {
+    this.isAdminView = !!this.auth.isAdmin;
+    this.isClientView = !!this.auth.isClient;
+    this.hasAdminPermission = !!this.auth.hasAdminPermission;
+    this.isEmpleadoView = !this.isClientView && !this.hasAdminPermission;
+
+    if (!this.isClientView) {
       // subscribe to empresa updates and request an initial refresh
-      this.empresaApi.empresa$.subscribe({ next: (d) => (this.empresa = d), error: (err: any) => console.error(err) });
+      this.empresaApi.empresa$.subscribe({ 
+        next: (d) => {
+          this.empresa = d;
+          this.cdr.detectChanges();
+        }, 
+        error: (err: any) => console.error(err) 
+      });
       this.empresaApi.refreshMyEmpresa().subscribe({ error: (err: any) => console.error('Error cargando datos de la empresa:', err) });
     }
-  }
-
-  get isEmpleadoTecnico(): boolean {
-    return !this.auth.isClient && !this.auth.hasAdminPermission;
   }
 
   getStarArray(rating: number | undefined): number[] {

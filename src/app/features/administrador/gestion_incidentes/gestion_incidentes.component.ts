@@ -3,7 +3,7 @@ import { AfterViewInit, Component, ElementRef, OnDestroy, OnInit, ViewChild } fr
 import { FormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
 import { forkJoin } from 'rxjs';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 
 import {
   IncidenteApiService,
@@ -33,6 +33,7 @@ export class IncidentesComponent implements OnInit, AfterViewInit, OnDestroy {
   private currentLocationMarker: any;
   private trackingIncidentMarker: any;
   private trackingTechMarker: any;
+  private trackingRoutePolyline: any;
   private voiceRecorder: MediaRecorder | null = null;
   private voiceChunks: BlobPart[] = [];
   private voiceStream: MediaStream | null = null;
@@ -85,6 +86,7 @@ export class IncidentesComponent implements OnInit, AfterViewInit, OnDestroy {
     public auth: AuthService,
     private clienteApi: ClienteApiService,
     private router: Router,
+    private route: ActivatedRoute,
     private empresaApi: EmpresaApiService,
   ) {}
 
@@ -260,6 +262,19 @@ export class IncidentesComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     }
 
+    if (incidentLat != null && incidentLng != null && techLat != null && techLng != null) {
+      if (!this.trackingRoutePolyline) {
+        this.trackingRoutePolyline = this.L.polyline([[techLat, techLng], [incidentLat, incidentLng]], {
+          color: '#3b82f6',
+          weight: 4,
+          opacity: 0.7,
+          dashArray: '5, 10'
+        }).addTo(this.trackingMap);
+      } else {
+        this.trackingRoutePolyline.setLatLngs([[techLat, techLng], [incidentLat, incidentLng]]);
+      }
+    }
+
     const points: [number, number][] = [];
     if (incidentLat != null && incidentLng != null) points.push([incidentLat, incidentLng]);
     if (techLat != null && techLng != null) points.push([techLat, techLng]);
@@ -285,15 +300,18 @@ export class IncidentesComponent implements OnInit, AfterViewInit, OnDestroy {
       }, 15000);
     };
 
+
+
     this.trackingSocket.onmessage = (event) => {
       try {
         const message = JSON.parse(event.data);
+        console.log('[TRACKING ADMIN]\nmensaje recibido:\n', JSON.stringify(message, null, 2));
         if (message?.tracking) {
           this.selectedTracking = message.tracking as IncidenteTrackingDto;
           this.updateTrackingMap();
         }
-      } catch {
-        // Ignore malformed WS payloads.
+      } catch (err) {
+        console.error('Error parseando WS tracking message:', err);
       }
     };
 
@@ -547,17 +565,7 @@ export class IncidentesComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   openTracking(it: IncidenteDto) {
-    this.api.getTracking(it.id).subscribe({
-      next: (tracking) => {
-        this.selectedTracking = tracking;
-        this.tecnicosCercanos = [];
-        setTimeout(() => this.updateTrackingMap(), 0);
-        this.connectTrackingSocket(it.id);
-      },
-      error: () => {
-        this.message = 'No se pudo obtener tracking';
-      },
-    });
+    this.router.navigate(['/app/incidentes', it.id, 'tracking']);
   }
 
   refreshTracking() {
@@ -592,9 +600,7 @@ export class IncidentesComponent implements OnInit, AfterViewInit, OnDestroy {
       this.message = 'El incidente no tiene latitud/longitud para búsqueda';
       return;
     }
-    // Ahora llamamos a la nueva función sin pasarle coordenadas ni radio
-
-    this.api.listTecnicosDisponibles().subscribe({
+    this.api.listTecnicosDisponibles(tracking.latitud_incidente, tracking.longitud_incidente).subscribe({
       next: (rows) => {
         this.tecnicosCercanos = rows || [];
       },
@@ -702,6 +708,23 @@ export class IncidentesComponent implements OnInit, AfterViewInit, OnDestroy {
     const url = prompt('URL de la evidencia (imagen/audio)');
     if (!url) return;
     this.api.addEvidencia(it.id, 'foto', url).subscribe({ next: () => this.load() });
+  }
+
+  formatEta(minutos: number | null | undefined): string {
+    if (minutos == null) return 'Sin ETA';
+    if (minutos < 60) return `${minutos} min`;
+
+    const horas = Math.floor(minutos / 60);
+    const mins = minutos % 60;
+
+    if (mins === 0) return `${horas} h`;
+    return `${horas} h ${mins} min`;
+  }
+
+  formatDistancia(km: number | null | undefined): string {
+    if (km == null) return 'Sin ubicación';
+    if (km < 1) return `${Math.round(km * 1000)} m`;
+    return `${km.toFixed(1)} km`;
   }
 }
 

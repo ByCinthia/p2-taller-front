@@ -46,6 +46,9 @@ export interface Empleado {
 	empresa: string;
 	empresa_nombre?: string | null;
 	foto_perfil: string | null;
+	latitud_actual?: number | null;
+	longitud_actual?: number | null;
+	disponible?: boolean;
 	roles: string[];
 	roles_asignados: Rol[];
 	cargo_nombre: string | null;

@@ -12,10 +12,21 @@ export interface MiAsignacionDto {
   incidente_estado?: string | null;
   incidente_latitud?: number | null;
   incidente_longitud?: number | null;
+  prioridad?: string | null;
+  cliente_nombre?: string | null;
+  cliente_telefono?: string | null;
+  vehiculo_marca?: string | null;
+  vehiculo_modelo?: string | null;
+  vehiculo_placa?: string | null;
+  vehiculo_anio?: number | null;
   fecha_asignacion: string;
   estado_tarea: string;
   servicio_id?: string | null;
   servicio_nombre?: string | null;
+  latitud_actual?: number | null;
+  longitud_actual?: number | null;
+  distancia_km?: number | null;
+  eta_minutos?: number | null;
 }
 
 /**

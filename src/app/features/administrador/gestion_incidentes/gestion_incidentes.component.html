@@ -134,12 +134,17 @@
   <section class="panel" style="margin-bottom: 1rem;" *ngIf="selectedTracking">
     <h4>Tracking del incidente {{ selectedTracking.incidente_id }}</h4>
     <div class="muted">
-      Estado: {{ selectedTracking.estado }}
+      Estado: {{ selectedTracking.estado === 'en_camino' ? 'Técnico en camino' : selectedTracking.estado === 'en_sitio' ? 'Técnico en sitio' : selectedTracking.estado }}
       • Destino: {{ selectedTracking.latitud_incidente ?? 'N/A' }}, {{ selectedTracking.longitud_incidente ?? 'N/A' }}
     </div>
     <div class="muted">
       Técnico: {{ selectedTracking.tecnico_nombre || 'Sin asignar' }}
       • Posición: {{ selectedTracking.tecnico_latitud ?? 'N/A' }}, {{ selectedTracking.tecnico_longitud ?? 'N/A' }}
+    </div>
+    <div class="muted" style="margin-top: 0.25rem; font-weight: 600;">
+      Distancia restante: {{ formatDistancia(selectedTracking.distancia_km) }}
+      • ETA: {{ formatEta(selectedTracking.eta_minutos) }}
+      • Última actualización: {{ selectedTracking.tecnico_ubicacion_actualizada_en ? (selectedTracking.tecnico_ubicacion_actualizada_en | date:'HH:mm:ss') : 'N/A' }}
     </div>
     <div style="display:flex; gap:0.5rem; margin-top:0.75rem;">
       <button class="btn" (click)="refreshTracking()">Refrescar tracking</button>
@@ -152,7 +157,20 @@
     <div #trackingMap class="map-canvas" style="margin-top: 0.75rem;"></div>
     <ul *ngIf="tecnicosCercanos.length" style="margin-top:0.75rem;">
       <li *ngFor="let t of tecnicosCercanos" class="muted">
-        {{ t.nombre_completo }} - {{ t.distancia_km }} km - {{ t.disponible ? 'disponible' : 'ocupado' }}
+        {{ t.nombre_completo }} 
+        <ng-container *ngIf="t.distancia_km != null">
+          - <span [style.color]="t.distancia_km > 100 ? '#ef4444' : 'inherit'">{{ formatDistancia(t.distancia_km) }}</span>
+          <ng-container *ngIf="t.tiempo_estimado_llegada_minutos != null">
+            - Tiempo estimado: {{ formatEta(t.tiempo_estimado_llegada_minutos) }}
+          </ng-container>
+          <div *ngIf="t.distancia_km > 100" style="color: #ef4444; font-size: 0.75rem; margin-top: 4px;">
+            <i class="bi bi-exclamation-triangle-fill"></i> Ubicación muy lejana, verificar coordenadas
+          </div>
+        </ng-container>
+        <ng-container *ngIf="t.distancia_km == null">
+          - Sin ubicación
+        </ng-container>
+        - {{ t.disponible ? 'disponible' : 'ocupado' }}
       </li>
     </ul>
   </section>
@@ -195,7 +213,27 @@
             <div class="muted">{{ it.descripcion }}</div>
             <div class="muted">Estado: {{ it.estado }} • Prioridad: {{ it.prioridad || 'N/A' }}</div>
             <div class="muted">Destino: {{ it.latitud ?? 'N/A' }}, {{ it.longitud ?? 'N/A' }}</div>
-            <div class="muted">Técnico asignado: Ver asignación</div>
+            <div class="muted" *ngIf="it.tecnico_asignado_nombre">
+              Técnico asignado: <strong>{{ it.tecnico_asignado_nombre }}</strong>
+            </div>
+            <div class="muted" *ngIf="it.estado_asignacion">
+              Estado: <strong>{{ it.estado_asignacion }}</strong>
+            </div>
+            <div class="muted" *ngIf="it.servicio_asignado">
+              Servicio Asignado: <strong>{{ it.servicio_asignado }}</strong>
+            </div>
+            <div class="muted" *ngIf="it.distancia_km != null">
+              Distancia: <strong [style.color]="it.distancia_km > 100 ? '#ef4444' : 'inherit'">{{ formatDistancia(it.distancia_km) }}</strong>
+              <small *ngIf="it.distancia_km > 100" style="display:block; font-size:0.75rem; color:#ef4444;">
+                <i class="bi bi-exclamation-triangle-fill"></i> Ubicación muy lejana, verificar coordenadas
+              </small>
+            </div>
+            <div class="muted" *ngIf="it.eta_minutos != null">
+              Tiempo estimado: <strong>{{ formatEta(it.eta_minutos) }}</strong>
+            </div>
+            <div class="muted" *ngIf="!it.tecnico_asignado_nombre">
+              Técnico asignado: Sin asignar
+            </div>
           </div>
           <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;justify-content:flex-end;">
             <select [(ngModel)]="it.estado">
@@ -207,10 +245,12 @@
               <option value="atendido">atendido</option>
             </select>
             <button class="btn" (click)="saveStatus(it)">Guardar</button>
-            <!-- Mostrar controles de asignación solo si la solicitud fue aceptada por esta empresa -->
-            <ng-container *ngIf="it.estado === 'aceptada' && it.accepted_empresa_id === auth.currentUser?.empresa_id">
+            <!-- Mostrar controles de asignación solo si la solicitud fue aceptada por esta empresa y está activa -->
+            <ng-container *ngIf="['aceptada', 'asignada', 'en_camino', 'en_sitio', 'en_proceso'].includes(it.estado) && it.accepted_empresa_id === auth.currentUser?.empresa_id">
               <input [(ngModel)]="asignaciones[it.id]" placeholder="empleado_id" />
-              <button class="btn btn-ghost" (click)="assignTecnico(it)">Asignar técnico</button>
+              <button class="btn btn-secondary" (click)="assignTecnico(it)">
+                {{ it.tecnico_asignado_nombre ? 'Reasignar técnico' : 'Asignar técnico' }}
+              </button>
             </ng-container>
             <button class="btn btn-ghost" (click)="openTracking(it)">Ver tracking</button>
             <button class="btn btn-ghost" (click)="addDiagPrompt(it)">Añadir diagnóstico</button>

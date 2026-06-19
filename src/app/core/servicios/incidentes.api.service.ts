@@ -16,6 +16,12 @@ export interface IncidenteDto {
   longitud?: number;
   creado_en: string;
   evidencias?: { id: string; tipo: string; url_archivo: string; texto?: string }[];
+  tecnico_asignado_id?: string | null;
+  tecnico_asignado_nombre?: string | null;
+  estado_asignacion?: string | null;
+  servicio_asignado?: string | null;
+  distancia_km?: number | null;
+  eta_minutos?: number | null;
 }
 
 export interface IncidenteCreateRequest {
@@ -49,11 +55,16 @@ export interface TecnicoUbicacionRequest {
 }
 
 export interface TecnicoCercanoDto {
+  id?: string | null;
   empleado_id: string;
   nombre_completo: string;
-  latitud: number;
-  longitud: number;
-  distancia_km: number;
+  latitud?: number | null;
+  longitud?: number | null;
+  latitud_actual?: number | null;
+  longitud_actual?: number | null;
+  distancia_km?: number | null;
+  tiempo_estimado_llegada_minutos?: number | null;
+  eta_minutos?: number | null;
   disponible: boolean;
 }
 
@@ -69,6 +80,8 @@ export interface IncidenteTrackingDto {
   tecnico_longitud?: number;
   tecnico_disponible?: boolean;
   tecnico_ubicacion_actualizada_en?: string;
+  distancia_km?: number | null;
+  eta_minutos?: number | null;
 }
 
 export interface DiagnosticoCreate {
@@ -168,9 +181,12 @@ export class IncidenteApiService {
    // );
  // }
 
-  listTecnicosDisponibles(): Observable<TecnicoCercanoDto[]> {
-  return this.http.get<TecnicoCercanoDto[]>(`${this.base}/incidentes/tecnicos/disponibles`);
-}
+  listTecnicosDisponibles(latitud?: number, longitud?: number): Observable<TecnicoCercanoDto[]> {
+    const params: any = {};
+    if (latitud != null) params.latitud = latitud;
+    if (longitud != null) params.longitud = longitud;
+    return this.http.get<TecnicoCercanoDto[]>(`${this.base}/incidentes/tecnicos/disponibles`, { params });
+  }
 
   getDiagnosticos(incidenteId: string) {
     return this.http.get<any[]>(`${this.base}/incidentes/${incidenteId}/diagnosticos`);

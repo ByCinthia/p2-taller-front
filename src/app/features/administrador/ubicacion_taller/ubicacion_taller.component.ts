@@ -2,13 +2,16 @@ import { Component, AfterViewInit, OnDestroy, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { EmpresaApiService, EmpresaDto } from '../../services/empresa.service';
 import { AuthService } from '../../services/auth/auth.service';
+import { IncidenteApiService } from '../../../core/servicios/incidentes.api.service';
+import { EmpleadoApiService } from '../../../core/servicios/empleados.api.service';
+import { FormsModule } from '@angular/forms';
 
 import * as L from 'leaflet';
 
 @Component({
   selector: 'app-ubicacion-taller',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './ubicacion_taller.component.html',
   styleUrls: ['./ubicacion_taller.component.css'],
 })
@@ -17,10 +20,13 @@ export class UbicacionTallerComponent implements AfterViewInit, OnDestroy {
   private marker?: L.Marker;
   latitud: number | null = null;
   longitud: number | null = null;
+  disponible: boolean = true;
   message = '';
 
   constructor(
     private readonly empresa: EmpresaApiService, 
+    private readonly incidentesApi: IncidenteApiService,
+    private readonly empleadoApi: EmpleadoApiService,
     private readonly ngZone: NgZone,
     public readonly auth: AuthService
   ) {}
@@ -69,8 +75,9 @@ export class UbicacionTallerComponent implements AfterViewInit, OnDestroy {
     }).addTo(this.map);
 
     this.map.on('click', (e: L.LeafletMouseEvent) => {
-      // solo admins pueden editar
-      if (!this.auth.isAdmin || !this.auth.hasAdminPermission) return;
+      // solo admins pueden editar taller, pero empleados editan la suya
+      if (!this.auth.isAdmin && !this.auth.isEmpleadoTecnico) return;
+      if (this.auth.isAdmin && !this.auth.hasAdminPermission) return;
       
       // run inside Angular zone to update bindings
       this.ngZone.run(() => {
@@ -107,7 +114,11 @@ export class UbicacionTallerComponent implements AfterViewInit, OnDestroy {
       },
       (err: any) => {
         this.ngZone.run(() => {
-          this.message = 'No se pudo obtener la ubicación: ' + err.message;
+          if (this.auth.isEmpleadoTecnico) {
+            this.message = 'No se pudo obtener tu ubicación. Activa permisos de ubicación o selecciona manualmente en el mapa. Error: ' + err.message;
+          } else {
+            this.message = 'No se pudo obtener la ubicación: ' + err.message;
+          }
         });
       },
       { enableHighAccuracy: true, timeout: 10000 },
@@ -115,37 +126,89 @@ export class UbicacionTallerComponent implements AfterViewInit, OnDestroy {
   }
 
   private cargarUbicacion() {
-    // Schedule the 'cargando' message after change detection to avoid
-    // ExpressionChangedAfterItHasBeenCheckedError.
-    setTimeout(() => (this.message = 'Cargando ubicación del taller...'));
-    this.empresa.getMyEmpresa().subscribe({
-      next: (e: EmpresaDto) => {
-        this.message = '';
-        if (e.latitud != null && e.longitud != null) {
-          this.latitud = Number(e.latitud);
-          this.longitud = Number(e.longitud);
-          this.setMarker(this.latitud, this.longitud);
-        } else {
-          // center on a reasonable default (country / world)
-          if (this.map) this.map.setView([ -17.783737, -63.182103 ], 6);
+    setTimeout(() => (this.message = 'Cargando ubicación...'));
+    
+    if (this.auth.isEmpleadoTecnico) {
+      this.empleadoApi.getMe().subscribe({
+        next: (emp) => {
+          this.message = '';
+          if (emp.latitud_actual != null && emp.longitud_actual != null) {
+            this.latitud = Number(emp.latitud_actual);
+            this.longitud = Number(emp.longitud_actual);
+            this.disponible = emp.disponible ?? true;
+            this.setMarker(this.latitud, this.longitud);
+          } else {
+            if (this.map) this.map.setView([ -17.783737, -63.182103 ], 6);
+          }
+        },
+        error: (err: any) => {
+          this.message = 'Error cargando tu ubicación: ' + (err?.error?.detail ?? err.message ?? '');
         }
-      },
-      error: (err: any) => {
-        this.message = 'Error cargando empresa: ' + (err?.error?.detail ?? err.message ?? '');
-      },
-    });
+      });
+    } else {
+      this.empresa.getMyEmpresa().subscribe({
+        next: (e: EmpresaDto) => {
+          this.message = '';
+          if (e.latitud != null && e.longitud != null) {
+            this.latitud = Number(e.latitud);
+            this.longitud = Number(e.longitud);
+            this.setMarker(this.latitud, this.longitud);
+          } else {
+            // center on a reasonable default (country / world)
+            if (this.map) this.map.setView([ -17.783737, -63.182103 ], 6);
+          }
+        },
+        error: (err: any) => {
+          this.message = 'Error cargando empresa: ' + (err?.error?.detail ?? err.message ?? '');
+        },
+      });
+    }
   }
 
   guardarUbicacion() {
-    if (this.latitud == null || this.longitud == null) return;
+    console.log('Guardar ubicación clickeado');
+    console.log('latitud=', this.latitud);
+    console.log('longitud=', this.longitud);
+
+    if (this.latitud == null || this.longitud == null) {
+      this.message = 'Primero obtén o selecciona una ubicación.';
+      return;
+    }
     this.message = 'Guardando ubicación...';
-    this.empresa.updateUbicacion(this.latitud, this.longitud).subscribe({
-      next: (res) => {
-        this.message = 'Ubicación guardada correctamente.';
-      },
-      error: (err: any) => {
-        this.message = 'Error guardando ubicación: ' + (err?.error?.detail ?? err.message ?? '');
-      },
-    });
+
+    if (this.auth.isEmpleadoTecnico) {
+      this.incidentesApi.updateMiUbicacion({
+        latitud: this.latitud,
+        longitud: this.longitud,
+        disponible: this.disponible
+      }).subscribe({
+        next: (res) => {
+          this.message = 'Ubicación actualizada correctamente.';
+          this.empleadoApi.invalidarCacheAsignaciones();
+          if (this.auth.currentUser) {
+            (this.auth.currentUser as any).latitud_actual = this.latitud!;
+            (this.auth.currentUser as any).longitud_actual = this.longitud!;
+          }
+          // Verify by fetching from GET /api/empleados/me/
+          this.empleadoApi.getMe().subscribe({
+            next: (empleadoData) => {
+              console.log('Location verified from server:', empleadoData.latitud_actual, empleadoData.longitud_actual);
+            }
+          });
+        },
+        error: (err: any) => {
+          this.message = 'No se pudo guardar la ubicación. ' + (err?.error?.detail ?? err.message ?? '');
+        },
+      });
+    } else {
+      this.empresa.updateUbicacion(this.latitud, this.longitud).subscribe({
+        next: (res) => {
+          this.message = 'Ubicación guardada correctamente.';
+        },
+        error: (err: any) => {
+          this.message = 'Error guardando ubicación: ' + (err?.error?.detail ?? err.message ?? '');
+        },
+      });
+    }
   }
 }

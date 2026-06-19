@@ -84,6 +84,47 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
             this.activeAlertIncidentId = incidentId;
           }
         }
+
+        // --- Lógica para EMPLEADO/TÉCNICO ---
+        const roleStr = String(user.role || '').toLowerCase();
+        const rolesArr = (user.roles || []).map((r: string) => String(r).toLowerCase());
+        const isEmpleado = roleStr === 'empleado' || roleStr === 'tecnico' || rolesArr.includes('empleado') || rolesArr.includes('tecnico');
+
+        if (isEmpleado) {
+          const validTypes = [
+            'nueva_asignacion',
+            'asignacion_tecnico',
+            'tecnico_asignado',
+            'assignment_created',
+            'nueva_solicitud_auxilio'
+          ];
+          
+          const notifType = String(notification.tipo || '').toLowerCase();
+          
+          if (validTypes.includes(notifType)) {
+            const incidentId = notification.data?.['incidente_id'] || notification.data?.['incidentId'];
+            
+            // Evitar toasts vacíos
+            if (!notification.titulo && !notification.mensaje && !incidentId) return;
+
+            const title = notification.titulo || 'Nueva Solicitud de Auxilio';
+            const message = notification.mensaje || `Incidente ${incidentId || 'asignado'} requiere atención`;
+
+            this.toastService.show({
+              type: 'info',
+              title: title,
+              message: message,
+              duration: 10000,
+              action: {
+                label: 'Ver solicitud',
+                callback: () => {
+                  const queryParams = incidentId ? { incidente_id: incidentId } : {};
+                  this.router.navigate(['/app/empleado/asignaciones/asignadas'], { queryParams });
+                }
+              }
+            });
+          }
+        }
       });
   }
 
@@ -108,7 +149,8 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
             this.toastService.incidentNotification(incidentId, {
               label: 'Ver solicitud',
               callback: () => {
-                this.router.navigate(['/app/incidentes', incidentId]);
+                const queryParams = incidentId ? { incidente_id: incidentId } : {};
+                this.router.navigate(['/app/empleado/asignaciones/asignadas'], { queryParams });
               },
             });
           } else {
@@ -117,7 +159,8 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
         },
         (incidentId) => {
           console.log('[MainLayoutComponent] Incident notification:', incidentId);
-          this.router.navigate(['/app/incidentes', incidentId]);
+          const queryParams = incidentId ? { incidente_id: incidentId } : {};
+          this.router.navigate(['/app/empleado/asignaciones/asignadas'], { queryParams });
         }
       );
     } catch (error) {

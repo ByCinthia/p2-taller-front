@@ -45,6 +45,7 @@ export const appRoutes: Routes = [
       { path: 'empleado/perfil', component: EmpleadoPanelComponent },
       { path: 'empleado/dashboard', component: DashboardComponent },
       { path: 'empleado/notificaciones', component: AdminNotificationsComponent },
+      { path: 'empleado/asignaciones/detalle/:id', loadComponent: () => import('./features/empleado/asignaciones_unificadas/detalle/detalle_servicio_empleado.component').then(m => m.DetalleServicioEmpleadoComponent) },
       { path: 'empleado/asignaciones/:tipoFiltro', component: EmpleadoAsignacionesComponent },
       { path: 'empleado/asignaciones', component: AsignacionesEmpleadoComponent },
       { path: 'empleados/nuevo', component: EmpleadoComponent },
@@ -73,6 +74,13 @@ export const appRoutes: Routes = [
       { path: 'vehiculos', component: VehiculosComponent },
       { path: 'incidentes', component: IncidentesComponent },
       { path: 'incidentes/lista', component: IncidentesComponent },
+      {
+        path: 'incidentes/:id/tracking',
+        loadComponent: () =>
+          import('./features/administrador/tracking_admin/tracking_admin.component').then(
+            (m) => m.TrackingAdminComponent
+          ),
+      },
       { path: 'asignaciones', component: AsignacionesEmpleadoComponent },
       { path: 'admin/perfil', component: AdminProfileComponent },
       { path: 'admin/notificaciones', component: AdminNotificationsComponent },

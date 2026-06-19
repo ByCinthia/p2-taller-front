@@ -154,11 +154,16 @@
               <button class="btn btn-ghost" (click)="verTracking(incidente)">
                 <i class="bi bi-bar-chart-fill"></i> Ver tracking
               </button>
-              <!-- Mostrar botón Asignar solo si ya fue aceptada por esta empresa -->
-              <button class="btn btn-primary" *ngIf="incidente.estado === 'aceptada' && incidente.accepted_empresa_id === auth.currentUser?.empresa_id" (click)="abrirModalAsignar(incidente)">
-                <i class="bi bi-person-fill"></i> Asignar técnico
+              <!-- Mostrar botón Asignar/Reasignar solo si fue aceptada por esta empresa y está en estado activo -->
+              <button class="btn btn-primary" 
+                *ngIf="['aceptada', 'asignada', 'en_camino', 'en_sitio', 'en_proceso'].includes(incidente.estado) && incidente.accepted_empresa_id === auth.currentUser?.empresa_id" 
+                (click)="abrirModalAsignar(incidente)">
+                <i class="bi bi-person-fill"></i>
+                {{ !incidente.tecnico_asignado_nombre ? 'Asignar técnico' : (isAdminView ? 'Reasignar técnico' : 'Ver técnico asignado') }}
               </button>
-              <button class="btn btn-danger" *ngIf="incidente.estado === 'aceptada' && incidente.accepted_empresa_id === auth.currentUser?.empresa_id" (click)="cancelarAceptacion(incidente)">
+              <button class="btn btn-danger" 
+                *ngIf="['aceptada', 'asignada', 'en_camino', 'en_sitio', 'en_proceso'].includes(incidente.estado) && incidente.accepted_empresa_id === auth.currentUser?.empresa_id" 
+                (click)="cancelarAceptacion(incidente)">
                 <i class="bi bi-x-lg"></i> Cancelar servicio
               </button>
             </ng-container>
@@ -219,6 +224,31 @@
               <div class="info-item">
                 <span class="label">ID</span>
                 <span class="value">{{ incidente.id }}</span>
+              </div>
+              <div class="info-item" *ngIf="incidente.tecnico_asignado_nombre">
+                <span class="label">Técnico</span>
+                <span class="value">{{ incidente.tecnico_asignado_nombre }}</span>
+              </div>
+              <div class="info-item" *ngIf="incidente.estado_asignacion">
+                <span class="label">Estado Asignación</span>
+                <span class="value">{{ incidente.estado_asignacion }}</span>
+              </div>
+              <div class="info-item" *ngIf="incidente.servicio_asignado">
+                <span class="label">Servicio Asignado</span>
+                <span class="value">{{ incidente.servicio_asignado }}</span>
+              </div>
+              <div class="info-item" *ngIf="incidente.distancia_km != null">
+                <span class="label">Distancia al cliente</span>
+                <span class="value" [style.color]="incidente.distancia_km > 100 ? '#ef4444' : 'inherit'">
+                  {{ formatDistancia(incidente.distancia_km) }}
+                  <small *ngIf="incidente.distancia_km > 100" style="display:block; font-size:0.75rem; margin-top:2px;">
+                    <i class="bi bi-exclamation-triangle-fill"></i> Ubicación muy lejana, verificar coordenadas
+                  </small>
+                </span>
+              </div>
+              <div class="info-item" *ngIf="incidente.eta_minutos != null">
+                <span class="label">Tiempo estimado</span>
+                <span class="value">{{ formatEta(incidente.eta_minutos) }}</span>
               </div>
             </div>
           </div>
@@ -294,6 +324,31 @@
               <span class="label">ID</span>
               <span class="value">{{ incidente.id }}</span>
             </div>
+            <div class="info-item" *ngIf="incidente.tecnico_asignado_nombre">
+              <span class="label">Técnico</span>
+              <span class="value">{{ incidente.tecnico_asignado_nombre }}</span>
+            </div>
+            <div class="info-item" *ngIf="incidente.estado_asignacion">
+              <span class="label">Estado Asignación</span>
+              <span class="value">{{ incidente.estado_asignacion }}</span>
+            </div>
+            <div class="info-item" *ngIf="incidente.servicio_asignado">
+              <span class="label">Servicio Asignado</span>
+              <span class="value">{{ incidente.servicio_asignado }}</span>
+            </div>
+            <div class="info-item" *ngIf="incidente.distancia_km != null">
+              <span class="label">Distancia al cliente</span>
+              <span class="value" [style.color]="incidente.distancia_km > 100 ? '#ef4444' : 'inherit'">
+                {{ formatDistancia(incidente.distancia_km) }}
+                <small *ngIf="incidente.distancia_km > 100" style="display:block; font-size:0.75rem; margin-top:2px;">
+                  <i class="bi bi-exclamation-triangle-fill"></i> Ubicación muy lejana, verificar coordenadas
+                </small>
+              </span>
+            </div>
+            <div class="info-item" *ngIf="incidente.eta_minutos != null">
+              <span class="label">Tiempo estimado</span>
+              <span class="value">{{ formatEta(incidente.eta_minutos) }}</span>
+            </div>
           </div>
         </div>
 
@@ -305,10 +360,10 @@
           <button
             class="btn btn-primary"
             (click)="abrirModalAsignar(incidente)"
-            [disabled]="incidente.estado !== 'pendiente'"
-            *ngIf="isAdminView"
+            *ngIf="isAdminView || (!incidente.tecnico_asignado_nombre && !isAdminView)"
           >
-            <i class="bi bi-person-fill"></i> Asignar técnico
+            <i class="bi bi-person-fill"></i> 
+            {{ !incidente.tecnico_asignado_nombre ? 'Asignar técnico' : (isAdminView ? 'Reasignar técnico' : 'Ver técnico asignado') }}
           </button>
           <button class="btn btn-ghost" (click)="verTracking(incidente)">
             <i class="bi bi-bar-chart-fill"></i> Ver tracking
@@ -358,7 +413,17 @@
                   </span>
                 </div>
                 <div class="tecnico-details">
-                  <span>Distancia: <strong>{{ tecnico.distancia_km.toFixed(1) }} km</strong></span>
+                  <span>Distancia: 
+                    <strong [style.color]="tecnico.distancia_km != null && tecnico.distancia_km > 100 ? '#ef4444' : 'inherit'">
+                      {{ formatDistancia(tecnico.distancia_km) }}
+                    </strong>
+                  </span>
+                  <span *ngIf="tecnico.tiempo_estimado_llegada_minutos != null">
+                    | Tiempo estimado: <strong>{{ formatEta(tecnico.tiempo_estimado_llegada_minutos) }}</strong>
+                  </span>
+                  <div *ngIf="tecnico.distancia_km != null && tecnico.distancia_km > 100" style="color: #ef4444; font-size: 0.75rem; margin-top: 4px;">
+                    <i class="bi bi-exclamation-triangle-fill"></i> Ubicación muy lejana, verificar coordenadas
+                  </div>
                 </div>
               </div>
               <button

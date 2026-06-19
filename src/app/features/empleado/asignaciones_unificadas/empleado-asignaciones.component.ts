@@ -213,6 +213,6 @@ export class EmpleadoAsignacionesComponent implements OnInit {
   }
 
   verDetalle(item: MiAsignacionDto): void {
-    this.router.navigate(['/app/incidentes'], { queryParams: { id: item.incidente_id } });
+    this.router.navigate(['/app/empleado/asignaciones/detalle', item.incidente_id]);
   }
 }

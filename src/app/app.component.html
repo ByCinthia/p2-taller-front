@@ -1,1 +1,12 @@
-<router-outlet></router-outlet>
+<ng-container *ngIf="auth.authLoaded$ | async; else loading">
+  <router-outlet></router-outlet>
+</ng-container>
+
+<ng-template #loading>
+  <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; background-color:#f5f7fa;">
+    <div class="spinner-border text-primary" role="status" style="width:3rem; height:3rem; margin-bottom:1rem;">
+      <span class="visually-hidden">Cargando...</span>
+    </div>
+    <h3 style="color:#2c3e50; font-family:sans-serif;">Iniciando sesión...</h3>
+  </div>
+</ng-template>

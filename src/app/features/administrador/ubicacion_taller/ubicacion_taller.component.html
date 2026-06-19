@@ -1,17 +1,27 @@
 <section class="card page-block">
   <header class="head">
-    <h2>Ubicación del taller</h2>
-    <p class="muted">Seleccione la ubicación del taller haciendo click en el mapa.</p>
+    <ng-container *ngIf="!auth.isEmpleadoTecnico">
+      <h2>Ubicación del taller</h2>
+      <p class="muted">Seleccione la ubicación del taller haciendo click en el mapa.</p>
+    </ng-container>
+    <ng-container *ngIf="auth.isEmpleadoTecnico">
+      <h2>Mi ubicación</h2>
+      <p class="muted">Actualiza tu ubicación para que el taller pueda asignarte servicios cercanos.</p>
+    </ng-container>
   </header>
 
   <div class="inner">
     <div id="map" style="height:400px; border-radius:8px; margin-bottom:12px;"></div>
 
-    <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;" *ngIf="auth.isAdmin && auth.hasAdminPermission">
+    <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;" *ngIf="(auth.isAdmin && auth.hasAdminPermission) || auth.isEmpleadoTecnico">
       <div>Latitud: <strong>{{ latitudDisplay }}</strong></div>
       <div>Longitud: <strong>{{ longitudDisplay }}</strong></div>
-      <button class="btn btn-primary" (click)="usarMiUbicacion()">Usar mi ubicación</button>
-      <button class="btn btn-ghost" (click)="guardarUbicacion()" [disabled]="!hasSelection">Guardar ubicación</button>
+      <div *ngIf="auth.isEmpleadoTecnico" style="display:flex; align-items:center; gap:4px;">
+        <input type="checkbox" id="disponibleCheck" [(ngModel)]="disponible">
+        <label for="disponibleCheck" style="margin:0;">Disponible</label>
+      </div>
+      <button class="btn btn-primary" (click)="usarMiUbicacion()">Usar mi ubicación actual</button>
+      <button class="btn btn-ghost" (click)="guardarUbicacion()">Guardar ubicación</button>
     </div>
 
     <p *ngIf="message" style="margin-top:8px; color:var(--muted);">{{ message }}</p>

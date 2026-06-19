@@ -25,10 +25,12 @@ export class AuthService {
   private readonly isAuthenticatedSubject = new BehaviorSubject<boolean>(false);
   private readonly decodedTokenSubject = new BehaviorSubject<DecodedToken | null>(null);
   private readonly permissionsSubject = new BehaviorSubject<string[]>([]);
+  private readonly authLoadedSubject = new BehaviorSubject<boolean>(false);
 
   readonly isAuthenticated$ = this.isAuthenticatedSubject.asObservable();
   readonly decodedToken$ = this.decodedTokenSubject.asObservable();
   readonly permissions$ = this.permissionsSubject.asObservable();
+  readonly authLoaded$ = this.authLoadedSubject.asObservable();
 
   constructor(
     private readonly http: HttpClient,
@@ -36,6 +38,10 @@ export class AuthService {
     private readonly pushNotificationService: PushNotificationService,
   ) {
     this.restoreSession();
+  }
+
+  get isAuthLoaded(): boolean {
+    return this.authLoadedSubject.value;
   }
 
   get token(): string | null {
@@ -56,10 +62,15 @@ export class AuthService {
 
   login(payload: LoginRequest): Observable<TokenResponse> {
     return this.http.post<TokenResponse>(`${environment.apiBaseUrl}/token/`, payload).pipe(
-      tap((tokens) => this.applyTokens(tokens)),
+      tap((tokens) => {
+        this.applyTokens(tokens);
+        console.log('[AUTH] Usuario cargado');
+        console.log('[AUTH] Roles cargados');
+      }),
       switchMap((tokens) =>
         this.loadMyPermissions().pipe(
           switchMap(() => {
+            console.log('[AUTH] Permisos cargados');
             this.registerPushNotificationsForCurrentUser();
             return of(tokens);
           })
@@ -184,6 +195,7 @@ export class AuthService {
     this.isAuthenticatedSubject.next(false);
     this.decodedTokenSubject.next(null);
     this.permissionsSubject.next([]);
+    this.authLoadedSubject.next(true);
     this.router.navigate(['/login']);
   }
 
@@ -225,6 +237,7 @@ export class AuthService {
   private restoreSession(): void {
     const token = this.token;
     if (!token) {
+      this.authLoadedSubject.next(true);
       return;
     }
 
@@ -237,13 +250,20 @@ export class AuthService {
 
       this.isAuthenticatedSubject.next(true);
       this.decodedTokenSubject.next(decoded);
+      console.log('[AUTH] Usuario cargado');
+      console.log('[AUTH] Roles cargados');
       this.loadMyPermissions().subscribe({
         next: () => {
+          console.log('[AUTH] Permisos cargados');
           if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
             this.registerPushNotificationsForCurrentUser();
           }
+          this.authLoadedSubject.next(true);
         },
-        error: () => this.permissionsSubject.next([]),
+        error: () => {
+          this.permissionsSubject.next([]);
+          this.authLoadedSubject.next(true);
+        },
       });
     } catch {
       void this.logout();
